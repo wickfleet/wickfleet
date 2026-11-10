@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "name": "RsiReversion",
+  "description": "Demo: buy when RSI 14 crosses back up through 30 while price is above SMA 200, sell when RSI 14 reaches 60.",
+  "timeframe": "1d",
+  "stoploss": -0.15,
+  "indicators": [
+    {"id": "rsi14", "kind": "rsi", "source": "close", "period": 14},
+    {"id": "sma200", "kind": "sma", "source": "close", "period": 200}
+  ],
+  "entry": {"all": [
+    {"left": "rsi14", "op": "crosses_above", "right": 30},
+    {"left": "close", "op": ">", "right": "sma200"}
+  ]},
+  "exit": {"any": [
+    {"left": "rsi14", "op": ">=", "right": 60}
+  ]}
+}

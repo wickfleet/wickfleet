@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "EmaCross",
+  "description": "Demo: long when EMA 12 crosses above EMA 26 while price is above SMA 200, out when EMA 12 crosses back below.",
+  "timeframe": "1d",
+  "stoploss": -0.15,
+  "indicators": [
+    {"id": "ema12", "kind": "ema", "source": "close", "period": 12},
+    {"id": "ema26", "kind": "ema", "source": "close", "period": 26},
+    {"id": "sma200", "kind": "sma", "source": "close", "period": 200}
+  ],
+  "entry": {"all": [
+    {"left": "ema12", "op": "crosses_above", "right": "ema26"},
+    {"left": "close", "op": ">", "right": "sma200"}
+  ]},
+  "exit": {"any": [
+    {"left": "ema12", "op": "crosses_below", "right": "ema26"}
+  ]}
+}

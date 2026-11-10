@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wickfleet sign in</title>
+<link rel="stylesheet" href="/hub/login.css">
+<script src="/hub/login.js" defer></script>
+</head>
+<body>
+<main>
+  <h1>Wickfleet</h1>
+  <form id="form" hidden>
+    <p id="intro"></p>
+    <label id="token-row" hidden>Setup token <input id="token" autocomplete="off"></label>
+    <label>User <input id="user" autocomplete="username" autocapitalize="none" required></label>
+    <label>Password <input id="password" type="password" autocomplete="current-password" required></label>
+    <button id="submit" type="submit">Sign in</button>
+  </form>
+  <section id="signed-in" hidden>
+    <p>Signed in as <b id="who"></b>.</p>
+    <button id="signout" type="button">Sign out</button>
+    <a id="back" href="/">Back</a>
+  </section>
+  <p id="error" role="alert"></p>
+</main>
+</body>
+</html>

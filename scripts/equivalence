@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Backtest a spec's generated strategy and its hand-written twin, then compare trade for trade.
+
+    scripts/equivalence SPEC.json HAND.py [--pairs BTC/USDT,...] [--timerange 20230101-20261101]
+
+Needs docker and network for the candles (cached in ~/.cache/wickfleet-equivalence).
+Fails unless both sides make the same trades and at least one.
+"""
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
+
+ap = argparse.ArgumentParser()
+ap.add_argument("spec")
+ap.add_argument("hand")
+ap.add_argument("--pairs", default="BTC/USDT,ETH/USDT,SOL/USDT,XRP/USDT,ADA/USDT")
+ap.add_argument("--timerange", default="20230101-20261101")
+ap.add_argument("--exchange", default="binance")
+ap.add_argument("--image", default=os.environ.get("FREQTRADE_IMAGE", "freqtradeorg/freqtrade:2026.10"))
+args = ap.parse_args()
+
+spec = json.load(open(args.spec))
+name, tf = spec["name"], spec["timeframe"]
+hand = re.search(r"^class (\w+)\(IStrategy\)", open(args.hand).read(), re.M).group(1)
+cache = os.path.expanduser("~/.cache/wickfleet-equivalence")
+os.makedirs(cache, exist_ok=True)
+work = tempfile.mkdtemp(prefix="equivalence-")
+try:
+    ud = os.path.join(work, "user_data")
+    os.makedirs(os.path.join(ud, "strategies"))
+    with open(os.path.join(ud, "strategies", name + ".py"), "w") as f:
+        subprocess.run(["go", "run", "./cmd/wickfleet-strategy", "gen", args.spec], stdout=f, check=True)
+    shutil.copy(args.hand, os.path.join(ud, "strategies"))
+    pairs = args.pairs.split(",")
+    cfg = {"max_open_trades": 3, "stake_currency": "USDT", "stake_amount": "unlimited",
+           "tradable_balance_ratio": 0.99, "dry_run": True, "dry_run_wallet": 1000, "timeframe": tf,
+           "exchange": {"name": args.exchange, "key": "", "secret": "", "pair_whitelist": pairs},
+           "entry_pricing": {"price_side": "same"}, "exit_pricing": {"price_side": "same"},
+           "pairlists": [{"method": "StaticPairList"}], "dataformat_ohlcv": "feather"}
+    json.dump(cfg, open(os.path.join(ud, "config.json"), "w"))
+    os.chmod(work, 0o777)
+    for root, dirs, _ in os.walk(work):
+        for d in dirs:
+            os.chmod(os.path.join(root, d), 0o777)
+
+    def ft(*cmd):
+        subprocess.run(["docker", "run", "--rm", "-v", f"{ud}:/freqtrade/user_data",
+                        "-v", f"{cache}:/freqtrade/user_data/data", args.image, *cmd,
+                        "--config", "user_data/config.json"], check=True)
+
+    # Startup candles: the timerange starts after them, so download a year earlier.
+    start = int(args.timerange[:4]) - 1
+    ft("download-data", "--timeframes", tf, "--timerange", f"{start}{args.timerange[4:8]}-")
+    ft("backtesting", "--strategy-list", name, hand, "--timerange", args.timerange, "--export", "trades")
+    results = os.path.join(ud, "backtest_results")
+    zips = sorted(z for z in os.listdir(results) if z.endswith(".zip"))
+    with zipfile.ZipFile(os.path.join(results, zips[-1])) as z:
+        body = next(n for n in z.namelist() if n.endswith(".json") and "_config" not in n)
+        strat = json.loads(z.read(body))["strategy"]
+
+    def key(t):
+        return (t["pair"], t["open_date"], t["close_date"], round(t["open_rate"], 8),
+                round(t["close_rate"], 8), t["exit_reason"], round(t["profit_ratio"], 9))
+    gen, own = [key(t) for t in strat[name]["trades"]], [key(t) for t in strat[hand]["trades"]]
+    reasons = {}
+    for t in gen:
+        reasons[t[5]] = reasons.get(t[5], 0) + 1
+    print(f"{name}: {len(gen)} trades {reasons}, {hand}: {len(own)} trades, "
+          f"{args.exchange} {tf} {','.join(pairs)} {args.timerange}")
+    if not gen or not own:
+        sys.exit("no trades on one side: nothing was compared")
+    if gen != own:
+        for a, b in zip(gen, own):
+            if a != b:
+                print(f"first difference:\n  {a}\n  {b}")
+                break
+        sys.exit("NOT EQUIVALENT")
+    print("EQUIVALENT")
+finally:
+    shutil.rmtree(work, ignore_errors=True)

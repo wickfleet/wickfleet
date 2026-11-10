@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Start wickfleet on this machine: seed a local registry from examples/registry,
+# bring up deploy/compose, and print the one-time token for the first admin.
+set -euo pipefail
+
+repo="$(cd "$(dirname "$0")/.." && pwd)"
+dir="$repo/deploy/compose"
+root="${WICKFLEET_ROOT:-$dir/data}"
+port="${WICKFLEET_PORT:-8000}"
+
+command -v docker >/dev/null || { echo "docker is not installed" >&2; exit 1; }
+docker compose version >/dev/null || { echo "docker compose v2 is needed" >&2; exit 1; }
+
+mkdir -p "$root"/{registry,secrets,state,bots,candles}
+if [ "$(uname)" = Linux ] && [ "$(id -u)" != 1000 ] && [ "$(stat -c %u "$root/state")" != 1000 ]; then
+  echo "The stack runs as uid 1000 (freqtrade's user). Run: sudo chown -R 1000:1000 $root" >&2
+  exit 1
+fi
+if [ ! -d "$root/registry/.git" ]; then
+  cp -R "$repo/examples/registry/." "$root/registry/"
+  git -C "$root/registry" init -q -b main
+  # The hub pushes its commits here; the checked-out tree follows them.
+  git -C "$root/registry" config receive.denyCurrentBranch updateInstead
+  git -C "$root/registry" add -A
+  git -C "$root/registry" -c user.name=wickfleet -c user.email=quickstart@wickfleet.invalid \
+    commit -q -m "seed from examples/registry"
+fi
+
+cat > "$dir/.env" <<EOF
+WICKFLEET_ROOT=$root
+WICKFLEET_PORT=$port
+EOF
+
+docker compose --project-directory "$dir" up -d --build --wait
+docker compose --project-directory "$dir" exec hub /wickfleet-hub setup-token
+echo "Login: http://localhost:$port/hub/login. The demo bot belongs to the user 'admin'."

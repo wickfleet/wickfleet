@@ -1,0 +1,7 @@
+.git
+bin
+coverage.out
+player/node_modules
+player/dist
+player/test-results
+player/playwright-report

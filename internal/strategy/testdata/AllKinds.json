@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "name": "AllKinds",
+  "description": "Uses every indicator kind and operator once; a smoke test for the generator.",
+  "timeframe": "1d",
+  "stoploss": -0.15,
+  "roi": {"0": 0.5, "1440": 0.2},
+  "trailing": {"positive": 0.02, "offset": 0.05, "only_offset_reached": true},
+  "indicators": [
+    {"id": "sma20", "kind": "sma", "source": "close", "period": 20},
+    {"id": "ema12", "kind": "ema", "source": "close", "period": 12},
+    {"id": "tema9", "kind": "tema", "source": "close", "period": 9, "shift": 1},
+    {"id": "lo10", "kind": "lowest", "source": "low", "period": 10},
+    {"id": "hi10", "kind": "highest", "source": "high", "period": 10},
+    {"id": "rsi14", "kind": "rsi", "source": "close", "period": 14},
+    {"id": "atr14", "kind": "atr", "period": 14},
+    {"id": "adx14", "kind": "adx", "period": 14},
+    {"id": "bb", "kind": "bollinger", "source": "close", "period": 20, "stddev": 2},
+    {"id": "m", "kind": "macd", "source": "close", "fast": 12, "slow": 26, "signal": 9},
+    {"id": "st", "kind": "stoch", "period": 14, "smooth_k": 3, "smooth_d": 3}
+  ],
+  "entry": {"any": [
+    {"left": "ema12", "op": "crosses_above", "right": "sma20"},
+    {"left": "rsi14", "op": "crosses_above", "right": 30},
+    {"left": "m.macd", "op": ">=", "right": "m.signal"},
+    {"left": "close", "op": "<=", "right": "bb.lower"},
+    {"left": "adx14", "op": "rising", "bars": 3}
+  ]},
+  "exit": {"any": [
+    {"left": "ema12", "op": "crosses_below", "right": "sma20"},
+    {"left": "st.k", "op": ">", "right": 80},
+    {"left": "close", "op": ">", "right": "bb.upper"},
+    {"left": "tema9", "op": "falling", "bars": 2},
+    {"left": "atr14", "op": ">", "right": "hi10"},
+    {"left": "close", "op": "<", "right": "lo10"}
+  ]}
+}

@@ -1,0 +1,150 @@
+# Wickfleet on one box: built-in login, dry run, a local git registry.
+# Start it with `make quickstart`, which writes .env and seeds the registry.
+name: wickfleet
+
+x-freqtrade: &freqtrade "${WICKFLEET_FREQTRADE_IMAGE:-freqtradeorg/freqtrade:2026.10@sha256:0cc4b6dc9b16e0516d27efae1765e925da7d6aea5c8f3c3825930ffe3098d7c7}"
+
+networks:
+  edge: {}
+  docker-api:
+    internal: true
+  # hub -> dockerguard -> socket-proxy-hub. The hub is not on docker-guard,
+  # so it cannot skip the guard.
+  docker-hub:
+    internal: true
+  docker-guard:
+    internal: true
+
+services:
+  # Read-only Docker API for Traefik's container discovery.
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    restart: unless-stopped
+    environment:
+      CONTAINERS: "1"
+      NETWORKS: "1"
+      POST: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-api]
+
+  socket-proxy-hub:
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    restart: unless-stopped
+    environment:
+      CONTAINERS: "1"
+      IMAGES: "1"
+      POST: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-guard]
+
+  dockerguard:
+    image: ${WICKFLEET_HUB_IMAGE:-ghcr.io/wickfleet/wickfleet-hub:latest}
+    build: ../..
+    restart: unless-stopped
+    entrypoint: ["/wickfleet-dockerguard"]
+    depends_on: [socket-proxy-hub]
+    environment:
+      WFGUARD_UPSTREAM: "http://socket-proxy-hub:2375"
+      WFGUARD_IMAGES: *freqtrade
+      WFGUARD_BIND_PREFIXES: "${WICKFLEET_ROOT:?run make quickstart}/bots/,${WICKFLEET_ROOT}/state/,${WICKFLEET_ROOT}/candles/"
+      WFGUARD_NETWORKS: wickfleet_edge
+      WFGUARD_USERS: "1000:1000"
+    networks: [docker-hub, docker-guard]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2375/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  traefik:
+    image: traefik:v3.7.17@sha256:30ff62491aacdb862ceb8c9edcf2627da638d7deafdd4b6dab32fe34f8aa3e90
+    restart: unless-stopped
+    depends_on: [socket-proxy]
+    command:
+      - --providers.docker=true
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=wickfleet_edge
+      - --entrypoints.web.address=:8000
+      - --ping=true
+      - --ping.entrypoint=web
+      - --log.level=INFO
+    ports:
+      - "127.0.0.1:${WICKFLEET_PORT:-8000}:8000"
+    networks: [edge, docker-api]
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping", "--ping.entrypoint=web", "--entrypoints.web.address=:8000"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  ui:
+    image: ${WICKFLEET_UI_IMAGE:-ghcr.io/wickfleet/wickfleet-ui:latest}
+    restart: unless-stopped
+    networks: [edge]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.ui.rule: "Host(`localhost`) && !PathPrefix(`/api`) && !PathPrefix(`/bots/`) && !PathPrefix(`/hub/`)"
+      traefik.http.routers.ui.entrypoints: web
+      traefik.http.routers.ui.priority: "1"
+      traefik.http.routers.ui.middlewares: "login,hubkey,hubauth,dropkey"
+      traefik.http.services.ui.loadbalancer.server.port: "80"
+
+  hub:
+    image: ${WICKFLEET_HUB_IMAGE:-ghcr.io/wickfleet/wickfleet-hub:latest}
+    build: ../..
+    restart: unless-stopped
+    depends_on: [dockerguard]
+    # freqtrade's own user: the bots and the hub share the data dirs.
+    user: "1000:1000"
+    environment:
+      WICKFLEET_AUTH: builtin
+      WICKFLEET_LISTEN: ":8090"
+      WICKFLEET_HOST: localhost
+      WICKFLEET_REGISTRY_DIR: ${WICKFLEET_ROOT}/registry
+      WICKFLEET_REGISTRY_WRITE_URL: ${WICKFLEET_ROOT}/registry
+      WICKFLEET_REGISTRY_WORKDIR: ${WICKFLEET_ROOT}/state/registry-rw
+      WICKFLEET_SECRETS_DIR: ${WICKFLEET_ROOT}/secrets
+      WICKFLEET_STATE_DIR: ${WICKFLEET_ROOT}/state
+      WICKFLEET_BOT_STATE: ${WICKFLEET_ROOT}/state
+      WICKFLEET_DATA_DIR: ${WICKFLEET_ROOT}/bots
+      WICKFLEET_CANDLE_DIR: ${WICKFLEET_ROOT}/candles
+      WICKFLEET_REPLAY_DIR: ${WICKFLEET_ROOT}/state/replays
+      WICKFLEET_REPLAY_SINCE: "${WICKFLEET_REPLAY_SINCE:-2023-01-01}"
+      WICKFLEET_DOCKER: "http://dockerguard:2375"
+      WICKFLEET_IMAGES: freqtrade=${WICKFLEET_FREQTRADE_IMAGE:-freqtradeorg/freqtrade:2026.10@sha256:0cc4b6dc9b16e0516d27efae1765e925da7d6aea5c8f3c3825930ffe3098d7c7}
+      WICKFLEET_NETWORK: wickfleet_edge
+      WICKFLEET_BOT_USER: "1000:1000"
+      # The registry is a local repo, owned by the host user on macOS.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: "*"
+    volumes:
+      - ${WICKFLEET_ROOT}/registry:${WICKFLEET_ROOT}/registry
+      - ${WICKFLEET_ROOT}/secrets:${WICKFLEET_ROOT}/secrets:ro
+      - ${WICKFLEET_ROOT}/state:${WICKFLEET_ROOT}/state
+      - ${WICKFLEET_ROOT}/bots:${WICKFLEET_ROOT}/bots
+      - ${WICKFLEET_ROOT}/candles:${WICKFLEET_ROOT}/candles
+    networks: [edge, docker-hub]
+    healthcheck:
+      test: ["CMD", "/wickfleet-hub", "-healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hub.rule: "Host(`localhost`) && PathPrefix(`/hub/`)"
+      traefik.http.routers.hub.entrypoints: web
+      traefik.http.routers.hub.priority: "90"
+      traefik.http.routers.hub.middlewares: "login"
+      traefik.http.services.hub.loadbalancer.server.port: "8090"
+      traefik.http.middlewares.hubauth.forwardauth.address: "http://hub:8090/authz"
+      traefik.http.middlewares.hubauth.forwardauth.maxresponsebodysize: "65536"
+      traefik.http.middlewares.hubauth.forwardauth.authresponseheaders: "Authorization,X-Wickfleet-User,X-Wickfleet-Role"
+      # Bot routes name login, hubkey and dropkey, which the proxy setup fills.
+      # Built-in login needs none of them: they only blank headers here.
+      traefik.http.middlewares.login.headers.customrequestheaders.X-Auth-Request-User: ""
+      traefik.http.middlewares.hubkey.headers.customrequestheaders.X-Wickfleet-Authz-Key: ""
+      traefik.http.middlewares.dropkey.headers.customrequestheaders.X-Wickfleet-Authz-Key: ""

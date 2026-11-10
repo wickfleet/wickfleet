@@ -1,0 +1,121 @@
+[
+ {
+  "sentence": "Daily turtle: buy when the close breaks above the highest high of the previous 55 days, sell when it falls below the lowest low of the previous 20 days. 15% stop.",
+  "timeframe": "1d",
+  "kinds": [
+   "highest",
+   "lowest"
+  ],
+  "ops": [
+   ">",
+   "<"
+  ]
+ },
+ {
+  "sentence": "On 30 minute candles buy when RSI 7 crosses above 25 and sell when RSI 7 crosses below 75. Stop at 4%.",
+  "timeframe": "30m",
+  "kinds": [
+   "rsi"
+  ],
+  "ops": [
+   "crosses_above",
+   "crosses_below"
+  ]
+ },
+ {
+  "sentence": "4 hour chart, golden cross: buy when the 12 period EMA crosses above the 26 period EMA, sell when it crosses back below. Stop at 8%.",
+  "timeframe": "4h",
+  "kinds": [
+   "ema"
+  ],
+  "ops": [
+   "crosses_above",
+   "crosses_below"
+  ]
+ },
+ {
+  "sentence": "Daily Bollinger band mean reversion: buy when the close drops below the lower band (20, 2), sell when it reaches the middle band. 10% stop.",
+  "timeframe": "1d",
+  "kinds": [
+   "bollinger"
+  ],
+  "ops": [
+   "<",
+   ">"
+  ]
+ },
+ {
+  "sentence": "MACD on 1h: buy when the MACD line crosses above its signal line, sell when it crosses below. 6% stop.",
+  "timeframe": "1h",
+  "kinds": [
+   "macd"
+  ],
+  "ops": [
+   "crosses_above",
+   "crosses_below"
+  ]
+ },
+ {
+  "sentence": "15 minute scalper: buy when stochastic K crosses above 20 and RSI 14 is below 40; sell when stochastic K goes above 80. 3% stop, take 2% profit.",
+  "timeframe": "15m",
+  "kinds": [
+   "stoch",
+   "rsi"
+  ],
+  "ops": [
+   "crosses_above",
+   "<",
+   ">"
+  ]
+ },
+ {
+  "sentence": "Weekly trend follower: buy when the close is above the 10 week simple average, sell when below it. Stop 25%.",
+  "timeframe": "1w",
+  "kinds": [
+   "sma"
+  ],
+  "ops": [
+   ">",
+   "<"
+  ]
+ },
+ {
+  "sentence": "Daily: buy when ADX 14 is above 25 and rising and the close is above the 50-day EMA; sell when the close falls below the 20-day lowest low. 15% stop with a 5% trailing stop.",
+  "timeframe": "1d",
+  "kinds": [
+   "adx",
+   "ema",
+   "lowest"
+  ],
+  "ops": [
+   ">",
+   "rising",
+   "<"
+  ]
+ },
+ {
+  "sentence": "Hourly breakout with volatility: buy when the close is above the 24 hour high from the previous candle and ATR 14 is rising; sell below the 24 hour average. 7% stop.",
+  "timeframe": "1h",
+  "kinds": [
+   "highest",
+   "atr",
+   "sma"
+  ],
+  "ops": [
+   ">",
+   "rising",
+   "<"
+  ]
+ },
+ {
+  "sentence": "Daily triple EMA: buy when price crosses above TEMA 30, sell when it crosses below. 12% stop loss.",
+  "timeframe": "1d",
+  "kinds": [
+   "tema"
+  ],
+  "ops": [
+   "crosses_above",
+   "crosses_below"
+  ]
+ }
+]

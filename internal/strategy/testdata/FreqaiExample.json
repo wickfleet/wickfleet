@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "FreqaiExample",
+  "description": "Demo: 1h, long only, enter when the model predicts a 24h mean move above 2%.",
+  "timeframe": "1h",
+  "stoploss": -0.10,
+  "model": {"features": "freqai_example", "target": "mean_return"},
+  "startup_candles": 40,
+  "entry_guard": {"max_above_close": 0.0025},
+  "indicators": [],
+  "entry": {"all": [
+    {"left": "do_predict", "op": "==", "right": 1},
+    {"left": "prediction", "op": ">", "right": 0.02}
+  ]},
+  "exit": {"all": [
+    {"left": "do_predict", "op": "==", "right": 1},
+    {"left": "prediction", "op": "<", "right": 0}
+  ]}
+}

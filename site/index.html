@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wickfleet</title>
+<meta name="description" content="One browser UI for a fleet of Freqtrade bots. Strategies from blocks, replays before a bot starts, dry run by default. Open source, GPL-3.0.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="./"><img src="favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <a class="gh" href="https://github.com/wickfleet/wickfleet">GitHub</a>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <h1>One browser UI for a fleet of Freqtrade bots.</h1>
+    <ul class="points">
+      <li><strong>Strategies from blocks.</strong> Build rules without writing Python, read back in plain words before you save.</li>
+      <li><strong>Replay before it runs.</strong> Backtest any bot over past candles, with lookahead and robustness checks.</li>
+      <li><strong>No bot passwords.</strong> People log in once and get a role. Every bot runs in its own container behind one origin.</li>
+    </ul>
+    <p class="cta"><a class="button" href="https://github.com/wickfleet/wickfleet">Get it on GitHub</a> <a class="button ghost" href="#quick-start">Quick start</a></p>
+    <figure class="shot lead"><img src="img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot" width="1440" height="900"></figure>
+  </section>
+
+  <section class="wrap">
+    <h2>What it looks like</h2>
+    <div class="grid">
+      <figure class="shot"><img src="img/strategy.png" alt="Strategy editor with Blockly blocks and a plain-words readback" width="1440" height="900" loading="lazy"><figcaption>Strategy from blocks, read back in plain words</figcaption></figure>
+      <figure class="shot"><img src="img/replay.png" alt="Replay summary with bias checks and robustness verdict" width="1440" height="900" loading="lazy"><figcaption>Replay with bias checks and a robustness verdict</figcaption></figure>
+      <figure class="shot"><img src="img/trade.png" alt="FreqUI trade view of one bot" width="1440" height="900" loading="lazy"><figcaption>Each bot in the FreqUI trade view</figcaption></figure>
+      <figure class="shot"><img src="img/first-admin.png" alt="First admin setup with a one-time token" width="1440" height="900" loading="lazy"><figcaption>First admin from a one-time token, no default password</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="wrap" id="quick-start">
+    <h2>Quick start</h2>
+    <p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1.</p>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+    <p>The script prints a one-time setup token. Open <code>http://localhost:8000/hub/login</code>, create the first admin, and a dry-run demo bot is already waiting in the fleet.</p>
+  </section>
+
+  <section class="wrap">
+    <h2>Security model</h2>
+    <ul class="plain">
+      <li>The browser never holds a bot API key. The hub adds it per request after checking role and ownership.</li>
+      <li>The hub reaches Docker only through a guard that allows bot containers of listed images, users and paths, with every capability dropped.</li>
+      <li>Login is the hub's own (argon2id, one-time first-admin token) or any OIDC provider through oauth2-proxy.</li>
+    </ul>
+    <p>Found a vulnerability? Write to <a href="mailto:security@wickfleet.com">security@wickfleet.com</a>.</p>
+  </section>
+
+  <section class="wrap notice">
+    <h2>Not financial advice</h2>
+    <p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default. Live trading needs an explicit switch on the instance and on the bot, a recent passing replay, and exchange keys from files on your host. Turning it on is your decision, your money and your risk. No warranty.</p>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 Daniel Humpf. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>.</p>
+</footer>
+</body>
+</html>
