@@ -369,7 +369,7 @@ with no warranty, see the licence.
 
 ## Licence
 
-Copyright (C) 2026 Daniel Humpf. Licensed under the GNU General Public License
+Copyright (C) 2026 [@dhumpf](https://github.com/dhumpf). Licensed under the GNU General Public License
 v3.0, see [LICENSE](LICENSE). It comes with no warranty.
 `examples/registry/strategies/SampleStrategy.py` is freqtrade's sample
 strategy, also GPL-3.0. Contributions are signed off under the DCO, there is no
