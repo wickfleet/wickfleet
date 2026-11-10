@@ -1,0 +1,2 @@
+filename,strategy,has_bias,total_signals,biased_entry_signals,biased_exit_signals,biased_indicators
+EmaCrossPeek.py,EmaCrossPeek,True,20,20,2,"sma200,enter_long"

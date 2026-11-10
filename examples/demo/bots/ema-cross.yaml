@@ -1,0 +1,6 @@
+# Read-only demo (WICKFLEET_AUTH=demo): owner demo is the one visitors see.
+name: ema-cross
+owner: demo
+strategy: EmaCross
+strategy_file: EmaCross.py
+pairs: [BTC/USDT, ETH/USDT, SOL/USDT]

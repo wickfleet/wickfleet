@@ -1,0 +1,6 @@
+# A demo bot on the EmaCross spec, dry run: it trades a simulated wallet.
+name: demo
+owner: admin
+strategy: EmaCross
+strategy_file: EmaCross.py
+pairs: [BTC/USDT, ETH/USDT, SOL/USDT]

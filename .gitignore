@@ -1,0 +1,7 @@
+/bin/
+/coverage.out
+__pycache__/
+/dev/arena/
+/research/.cache/
+deploy/compose/.env
+deploy/compose/data/

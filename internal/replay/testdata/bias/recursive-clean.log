@@ -1,0 +1,88 @@
+2026-11-10 00:39:48,394 - freqtrade - INFO - freqtrade 2026.10
+2026-11-10 00:39:48,554 - numexpr.utils - INFO - NumExpr defaulting to 4 threads.
+2026-11-10 00:39:49,346 - freqtrade.configuration.load_config - INFO - Using config: /r/config.json ...
+2026-11-10 00:39:49,347 - freqtrade.configuration.configuration - INFO - Parameter --no-color detected ...
+2026-11-10 00:39:49,348 - freqtrade.loggers - INFO - Logfile configured
+2026-11-10 00:39:49,348 - freqtrade.loggers - INFO - Verbosity set to 0
+2026-11-10 00:39:49,348 - freqtrade.configuration.configuration - INFO - Using additional Strategy lookup path: /r/s
+2026-11-10 00:39:49,348 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20230701-20261101 ...
+2026-11-10 00:39:49,354 - freqtrade.configuration.configuration - INFO - Using user-data directory: /freqtrade/user_data ...
+2026-11-10 00:39:49,355 - freqtrade.configuration.configuration - INFO - Using data directory: /d/binance ...
+2026-11-10 00:39:49,355 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20230701-20261101
+2026-11-10 00:39:49,355 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2026-11-10 00:39:49,362 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2026-11-10 00:39:49,363 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2026-11-10 00:39:49,363 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-11-10 00:39:49,371 - freqtrade.optimize.analysis.recursive_helpers - INFO - Recursive test of EmaCross.py started.
+2026-11-10 00:39:49,371 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2026-11-10 00:39:49,371 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.90
+2026-11-10 00:39:49,374 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2026-11-10 00:39:50,674 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange class 'Binance' ...
+2026-11-10 00:39:50,676 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy EmaCross from '/r/s/EmaCross.py'...
+2026-11-10 00:39:50,676 - freqtrade.strategy.hyper - INFO - Found no parameter file.
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value from the configuration: 1d.
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value from the configuration: USDT.
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value from the configuration: unlimited.
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value from the configuration: 3.
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 100}
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 1d
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.15
+2026-11-10 00:39:50,677 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'limit', 'exit': 'limit', 'stoploss': 'limit', 'stoploss_on_exchange': False, 
+'stoploss_on_exchange_interval': 60}
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+2026-11-10 00:39:50,678 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: unlimited
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 200
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+2026-11-10 00:39:50,679 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: -1
+2026-11-10 00:39:50,680 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: 3
+2026-11-10 00:39:50,680 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-11-10 00:39:50,681 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from '/freqtrade/freqtrade/plugins/pairlist/StaticPairList.py'...
+2026-11-10 00:39:50,685 - freqtrade.optimize.backtesting - INFO - Using fee 0.1000% - worst case fee from exchange (lowest tier).
+2026-11-10 00:39:50,685 - freqtrade.optimize.analysis.recursive - INFO - Using pair BTC/USDT only for recursive analysis. Replacing whitelist.
+2026-11-10 00:39:50,696 - freqtrade.data.history.datahandlers.idatahandler - WARNING - BTC/USDT, spot, 1d, data starts at 2023-01-01 00:00:00
+2026-11-10 00:39:50,700 - freqtrade.optimize.backtesting - INFO - Loading data from 2023-01-01 00:00:00 up to 2026-11-01 00:00:00 (1400 days).
+2026-11-10 00:39:50,708 - freqtrade.loggers.set_log_levels - INFO - Reducing verbosity for bias tester.
+2026-11-10 00:39:50,708 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators to test lookahead on indicators.
+2026-11-10 00:39:50,716 - freqtrade.data.history.datahandlers.idatahandler - WARNING - BTC/USDT, spot, 1d, data starts at 2023-01-01 00:00:00
+2026-11-10 00:39:50,719 - freqtrade.optimize.backtesting - INFO - Loading data from 2023-01-01 00:00:00 up to 2023-07-11 00:00:00 (191 days).
+2026-11-10 00:39:50,724 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators using startup candle of 199.
+2026-11-10 00:39:50,735 - freqtrade.optimize.backtesting - INFO - Loading data from 2026-04-15 00:00:00 up to 2026-11-01 00:00:00 (200 days).
+2026-11-10 00:39:50,738 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators using startup candle of 200.
+2026-11-10 00:39:50,748 - freqtrade.optimize.backtesting - INFO - Loading data from 2026-04-14 00:00:00 up to 2026-11-01 00:00:00 (201 days).
+2026-11-10 00:39:50,751 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators using startup candle of 399.
+2026-11-10 00:39:50,762 - freqtrade.optimize.backtesting - INFO - Loading data from 2025-09-27 00:00:00 up to 2026-11-01 00:00:00 (400 days).
+2026-11-10 00:39:50,765 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators using startup candle of 499.
+2026-11-10 00:39:50,776 - freqtrade.optimize.backtesting - INFO - Loading data from 2025-06-19 00:00:00 up to 2026-11-01 00:00:00 (500 days).
+2026-11-10 00:39:50,780 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators using startup candle of 999.
+2026-11-10 00:39:50,790 - freqtrade.optimize.backtesting - INFO - Loading data from 2024-02-05 00:00:00 up to 2026-11-01 00:00:00 (1000 days).
+2026-11-10 00:39:50,796 - freqtrade.optimize.analysis.recursive - INFO - Calculating indicators using startup candle of 1999.
+2026-11-10 00:39:50,801 - freqtrade.exchange.exchange - WARNING - Using 2 calls to get OHLCV. This can result in slower operations for the bot. Please check if you really need 1999 candles for your 
+strategy.
+2026-11-10 00:39:50,804 - freqtrade.data.history.datahandlers.idatahandler - WARNING - BTC/USDT, spot, 1d, data starts at 2023-01-01 00:00:00
+2026-11-10 00:39:50,807 - freqtrade.optimize.backtesting - INFO - Loading data from 2023-01-01 00:00:00 up to 2026-11-01 00:00:00 (1400 days).
+2026-11-10 00:39:50,814 - freqtrade.loggers.set_log_levels - INFO - Restoring log verbosity.
+2026-11-10 00:39:50,815 - freqtrade.optimize.analysis.recursive - INFO - Start checking for recursive bias
+2026-11-10 00:39:50,817 - freqtrade.optimize.analysis.recursive - INFO - No variance on indicator(s) found due to recursive formula.
+2026-11-10 00:39:50,817 - freqtrade.optimize.analysis.recursive - INFO - Start checking for lookahead bias on indicators only
+2026-11-10 00:39:50,818 - freqtrade.optimize.analysis.recursive - INFO - Check indicators at 2023-07-11T00:00:00
+2026-11-10 00:39:50,818 - freqtrade.optimize.analysis.recursive - INFO - No lookahead bias on indicators found.
+2026-11-10 00:39:50,818 - freqtrade.optimize.analysis.recursive_helpers - INFO - Checking recursive and indicator-only lookahead bias of indicators of EmaCross.py took 1 seconds.
+Startup candle 1999 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6/6 100% • 0:00:00 • 0:00:00
+                           Recursive Analysis                            
+┏━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━┳━━━━━┳━━━━━━┓
+┃ Indicators ┃    199 ┃ 200 (from strategy) ┃    399 ┃ 499 ┃ 999 ┃ 1999 ┃
+┡━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━╇━━━━━╇━━━━━━┩
+│      ema26 │ 0.000% │              0.000% │ 0.000% │   - │   - │    - │
+└────────────┴────────┴─────────────────────┴────────┴─────┴─────┴──────┘

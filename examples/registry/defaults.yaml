@@ -1,0 +1,7 @@
+# Values every bot inherits. A bot file overrides any of them.
+exchange: binance
+stake_currency: USDT
+wallet: 1000
+max_open_trades: 3
+image: freqtrade
+dry_run: true
