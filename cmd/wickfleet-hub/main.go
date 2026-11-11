@@ -23,6 +23,7 @@ import (
 	"wickfleet/internal/atomicfile"
 	"wickfleet/internal/authz"
 	"wickfleet/internal/botapi"
+	"wickfleet/internal/compare"
 	"wickfleet/internal/demo"
 	"wickfleet/internal/docker"
 	"wickfleet/internal/drafter"
@@ -34,6 +35,7 @@ import (
 	"wickfleet/internal/reconcile"
 	"wickfleet/internal/registry"
 	"wickfleet/internal/replay"
+	"wickfleet/internal/risk"
 	"wickfleet/internal/signals"
 	"wickfleet/internal/watch"
 )
@@ -189,6 +191,8 @@ type hub struct {
 	last reconcile.Result
 
 	replays *replay.Runner
+	compare *compare.Service // nil: no comparisons, not even earlier ones
+	riskAPI *risk.API
 	login   *login.Service // nil in proxy mode
 
 	dmu       sync.Mutex
@@ -430,6 +434,19 @@ func (h *hub) source(b registry.Bot) fleet.Source {
 	return freqtrade.Client{Base: fmt.Sprintf(h.cfg.BotURL, b.Name), User: b.Name, Pass: pw}
 }
 
+// risk is one risk view for the hub's life, so its cache holds across route builds.
+func (h *hub) risk() *risk.API {
+	h.dmu.Lock()
+	defer h.dmu.Unlock()
+	if h.riskAPI == nil {
+		h.riskAPI = &risk.API{Bots: h.Bots, CacheFor: h.cfg.CacheFor, Source: func(b registry.Bot) risk.Source {
+			pw, _ := h.secret(b.Name)
+			return freqtrade.Client{Base: fmt.Sprintf(h.cfg.BotURL, b.Name), User: b.Name, Pass: pw}
+		}}
+	}
+	return h.riskAPI
+}
+
 func (h *hub) fleet(ctx context.Context) fleet.Report {
 	h.fmu.Lock()
 	defer h.fmu.Unlock()
@@ -586,6 +603,8 @@ func (h *hub) apiRoutes(api botapi.Mux) {
 		bapi.Store = st
 	}
 	bapi.Routes(api)
+	compare.API{Service: h.compare, Bots: h.Bots, Demo: h.cfg.Auth == "demo"}.Routes(api)
+	h.risk().Routes(api)
 	if h.ext != nil {
 		h.ext.routes(api)
 	}
@@ -737,6 +756,16 @@ func main() {
 				time.Sleep(24 * time.Hour)
 			}
 		}()
+	}
+	// Comparisons queue replays. Without replay the earlier ones are still shown.
+	cmp := &compare.Service{Dir: filepath.Join(cfg.StateDir, "comparisons"), Log: log.Printf, MaxActive: 2, MaxBots: 12, Keep: 50}
+	if h.replays != nil {
+		cmp.Replays = h.replays
+	}
+	if err := cmp.Start(context.Background()); err != nil {
+		log.Printf("comparisons off: %v", err)
+	} else {
+		h.compare = cmp
 	}
 	go func() {
 		for {

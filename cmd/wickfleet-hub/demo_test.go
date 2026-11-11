@@ -98,6 +98,15 @@ func TestDemoReads(t *testing.T) {
 	if code != 200 || !strings.Contains(body, `"ma"`) || strings.Contains(body, `"lu"`) {
 		t.Fatalf("bots: %d %s, want ma only", code, body)
 	}
+	// Risk: the demo bot only, as a viewer sees it (no money). Compare: earlier runs only.
+	code, body = get("/hub/api/risk", true)
+	if code != 200 || !strings.Contains(body, `"redacted":true`) || !strings.Contains(body, `"ma"`) || strings.Contains(body, `"lu"`) {
+		t.Fatalf("risk: %d %s", code, body)
+	}
+	code, body = get("/hub/api/compare", true)
+	if code != 200 || !strings.Contains(body, `"demo":true`) || !strings.Contains(body, `"can_run":false`) {
+		t.Fatalf("compare: %d %s", code, body)
+	}
 	if code, _ := get("/hub/api/reconcile", true); code != http.StatusForbidden {
 		t.Fatalf("reconcile is admin only, forged admin got %d", code)
 	}

@@ -103,6 +103,20 @@ DOCKERFILE ?= Dockerfile
 image: ## Build the container image (needs docker)
 	docker build --network=host -f $(DOCKERFILE) --build-arg VERSION=$(VERSION) -t $(IMAGE):$(VERSION) .
 
+##@ Website
+
+SITE_URL     ?= https://wickfleet.com
+INDEXNOW_KEY ?= 4faebe286898aed7a27eabcafbb8f100
+
+.PHONY: site-check
+site-check: ## SEO tags, sitemap, robots and internal links of site/ (fails on a gap)
+	python3 scripts/site-check.py site --base $(SITE_URL) --skip 404.html
+
+# Run after the site is live; DRY=1 prints the payload only.
+.PHONY: indexnow
+indexnow: ## Submit the live sitemap to IndexNow (Bing and others)
+	scripts/indexnow.sh $(SITE_URL)/sitemap.xml $(INDEXNOW_KEY)
+
 ##@ Release
 
 PUBLISH ?= $(HOME)/Development/brain/infra/tools/publish/publish
