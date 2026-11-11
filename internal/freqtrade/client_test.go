@@ -67,3 +67,34 @@ func TestFeesNil(t *testing.T) {
 		t.Fatal("nil fees must be zero")
 	}
 }
+
+func TestOpenTradesAndDrawdown(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/status":
+			// freqtrade 2026.10 field names. Stop distance is a ratio of the current rate.
+			w.Write([]byte(`[{"trade_id":7,"pair":"BTC/USDT","base_currency":"BTC","quote_currency":"USDT","is_open":true,
+				"amount":0.01,"stake_amount":600.5,"open_rate":60050,"current_rate":61000,"stop_loss_abs":57000,
+				"stoploss_current_dist_ratio":-0.06557377,"profit_ratio":0.0158,"open_date":"2026-11-01 10:00:00"}]`))
+		case "/api/v1/profit":
+			w.Write([]byte(`{"trade_count":3,"max_drawdown":0.125,"max_drawdown_abs":130.2,"current_drawdown":0.05,"current_drawdown_abs":51.1}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	c := Client{Base: srv.URL}
+	open, err := c.Status(context.Background())
+	if err != nil || len(open) != 1 {
+		t.Fatalf("%v %v", open, err)
+	}
+	o := open[0]
+	if o.Pair != "BTC/USDT" || o.Base != "BTC" || o.Quote != "USDT" || o.Amount != 0.01 || o.StakeAmount != 600.5 ||
+		o.CurrentRate != 61000 || o.StopLossAbs == nil || *o.StopLossAbs != 57000 || o.StopDistRatio == nil || *o.StopDistRatio > -0.065 {
+		t.Fatalf("open trade %+v", o)
+	}
+	p, err := c.Profit(context.Background())
+	if err != nil || p.MaxDrawdown != 0.125 || p.CurrentDrawdown != 0.05 || p.MaxDrawdownAbs != 130.2 || p.CurrentDrawdownAbs != 51.1 {
+		t.Fatalf("profit %+v %v", p, err)
+	}
+}

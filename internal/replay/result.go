@@ -28,6 +28,13 @@ type Summary struct {
 	MaxDrawdown   float64 `json:"max_drawdown"`     // absolute
 	MaxDrawdownPc float64 `json:"max_drawdown_pct"` // relative, percent
 	MarketPct     float64 `json:"market_pct"`       // buy-and-hold of the pairs, averaged
+	// freqtrade's own figures, nil when the result does not carry them.
+	Sharpe       *float64 `json:"sharpe,omitempty"`
+	Sortino      *float64 `json:"sortino,omitempty"`
+	Calmar       *float64 `json:"calmar,omitempty"`
+	ProfitFactor *float64 `json:"profit_factor,omitempty"`
+	WinRatePct   *float64 `json:"win_rate_pct,omitempty"`
+	HoldingAvgS  *float64 `json:"holding_avg_s,omitempty"` // average trade duration, seconds
 }
 
 // Trade is one closed (or force-closed) backtest trade.
@@ -85,6 +92,12 @@ type ftStrategy struct {
 	BacktestStart       string    `json:"backtest_start"`
 	BacktestEnd         string    `json:"backtest_end"`
 	StakeCurrency       string    `json:"stake_currency"`
+	Sharpe              *float64  `json:"sharpe"`
+	Sortino             *float64  `json:"sortino"`
+	Calmar              *float64  `json:"calmar"`
+	ProfitFactor        *float64  `json:"profit_factor"`
+	Winrate             *float64  `json:"winrate"`
+	HoldingAvgS         *float64  `json:"holding_avg_s"`
 }
 
 // ParseResult reads a freqtrade backtest-result-*.zip. Fees are what the
@@ -129,6 +142,11 @@ func summarize(name string, s ftStrategy) (Summary, []Trade, error) {
 		ProfitNet: s.ProfitTotalAbs, ProfitPct: s.ProfitTotal * 100,
 		MaxDrawdown: s.MaxDrawdownAbs, MaxDrawdownPc: s.MaxRelativeDrawdown * 100,
 		MarketPct: s.MarketChange * 100,
+		Sharpe:    defined(s.Sharpe), Sortino: defined(s.Sortino), Calmar: defined(s.Calmar), ProfitFactor: s.ProfitFactor, HoldingAvgS: s.HoldingAvgS,
+	}
+	if s.Winrate != nil {
+		w := *s.Winrate * 100
+		out.WinRatePct = &w
 	}
 	trades := make([]Trade, 0, len(s.Trades))
 	for _, t := range s.Trades {
@@ -141,4 +159,12 @@ func summarize(name string, s ftStrategy) (Summary, []Trade, error) {
 	}
 	out.ProfitGross = out.ProfitNet + out.Fees
 	return out, trades, nil
+}
+
+// defined drops freqtrade's -100, which marks a ratio with a zero denominator.
+func defined(v *float64) *float64 {
+	if v == nil || *v == -100 {
+		return nil
+	}
+	return v
 }

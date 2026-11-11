@@ -95,6 +95,10 @@ behind oauth2-proxy (`proxy`).
 | `POST /hub/api/replays` | UI, operators and admins | backtest an existing `bot` or an unsaved `draft` (same fields as PUT) over `from`..`to`. 202 with a job id, 429 when 5 are queued |
 | `GET /hub/api/replays` | UI | your replays (admins: all, plus candle store fetches) with state and summary |
 | `GET /hub/api/replays/{id}` | UI | one replay. Trades once it is done |
+| `POST /hub/api/compare` | UI, operators and admins | replay 2 to 12 `bots` (or `all` the caller may replay, managed bots left out) over one `from`..`to`. 202 with a job id, 429 when 2 comparisons run. Operators name only their own bots (404 otherwise). Refused in the demo (403) |
+| `GET /hub/api/compare` | UI | comparisons the caller may see, without equity curves: admins all, others those where every bot is theirs. `can_run`, `demo`. Viewers get no money figures |
+| `GET /hub/api/compare/{id}` | UI | one comparison: per bot replay state, metrics and a daily equity curve on the shared dates. Viewers (the demo too) get `redacted: true`: no balances, absolute profit or equity in currency, the curve as return % only |
+| `GET /hub/api/risk` | UI | live risk of the caller's bots (admins: all) from their REST APIs: open trades, capital at stake, exposure per pair and per base coin, drawdown against the worst so far, stoploss distance, pair overlap. Viewers get no money figures and no exposure lists |
 | `GET /hub/api/specs` | UI | strategy specs in the registry: name, author, model, bots using it, editable |
 | `GET /hub/api/specs/{Name}` | UI | one spec with its readback and generated code |
 | `POST /hub/api/specs/check` | UI, operators and admins | validate a spec without saving: errors, or readback and code |
@@ -299,6 +303,43 @@ the gate for live trading: saving a bot with `dry_run: false`, new or edited,
 needs a replay of exactly those settings from the last 7 days that passed the
 bias checks and this verdict. A replay always runs on paper, even for a live bot.
 
+## Compare
+
+A comparison replays several bots over the same window, each with its own
+pairs, strategy, timeframe and stake, as ordinary replay jobs. It queues one bot
+at a time and the next only once the one before has left the queue, so it holds
+one queue place at most and the replay limits above apply unchanged (one replay
+at a time, never two on one exchange, the shared candle store). A full queue
+(429 from replay) is waited out. At most 2 comparisons run at once and 12 bots
+go in one. A comparison is kept in `<WICKFLEET_STATE_DIR>/comparisons/` (the
+newest 50), so a read-only demo still shows the last one. One that a hub restart
+interrupts is marked failed.
+
+| Figure | From |
+|---|---|
+| Profit %, absolute profit, start and final balance, buy-and-hold | the backtest result: `profit_total`, `profit_total_abs`, `starting_balance`, `final_balance`, `market_change` |
+| Max drawdown | `max_relative_drawdown` |
+| Sharpe, Sortino, Calmar, profit factor | freqtrade's own `sharpe`, `sortino`, `calmar`, `profit_factor`. Left out when the result has none, or has freqtrade's -100 for a zero denominator |
+| Win rate | `winrate`, else wins over trades |
+| Trades, average duration | `total_trades`, `holding_avg_s`, else the mean of the trades' open to close |
+| Walk-forward windows passed, Monte Carlo worst-5% drawdown and ruin share, verdict | the replay's robustness verdict and bias checks (`pass`, `fail`, `biased`) |
+| Equity curve | start balance plus each trade's net profit on the day it closed, one point per day from `from` to `to` |
+
+A bot whose replay fails is listed with its error, never with zeros. Viewers,
+the demo included, get percentages, ratios, counts and verdicts only: start and
+final balance, absolute profit and each day's equity are left out server-side,
+and the curve stays as return %.
+
+## Risk
+
+`GET /hub/api/risk` reads `/status`, `/profit` and `/balance` of each bot the
+caller may see, cached for 30 s. Money is summed per stake currency, dry and
+live apart. A base coin is one line across pairs and stake currencies: its
+amount sums, its value stays per currency. Drawdown is freqtrade's
+`current_drawdown` against `max_drawdown` over closed trades. Overlap lists the
+configured pairs that two or more bots trade. A bot that does not answer is
+listed with its error and left out of every sum.
+
 `internal/replay/integration_test.go` runs a real replay. It needs a socket
 proxy like production's and a dir Docker can bind:
 
@@ -306,6 +347,10 @@ proxy like production's and a dir Docker can bind:
 docker run -d --name wf-it-proxy -p 127.0.0.1:23750:2375 -v /var/run/docker.sock:/var/run/docker.sock:ro -e CONTAINERS=1 -e IMAGES=1 -e POST=1 tecnativa/docker-socket-proxy:v0.4.1
 WICKFLEET_IT_DOCKER=http://127.0.0.1:23750 WICKFLEET_IT_DIR=$(mktemp -d) WICKFLEET_IT_USER=1000:1000 go test ./internal/replay -run Integration -v
 ```
+
+`internal/compare/integration_test.go` runs a four-bot comparison the same way
+(`go test ./internal/compare -run Integration -v`), `WICKFLEET_IT_IMAGE` picks
+the freqtrade image.
 
 ## Strategy specs
 

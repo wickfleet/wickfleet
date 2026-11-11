@@ -34,6 +34,26 @@ func TestParseResult(t *testing.T) {
 	if !near(fees, s.Fees) {
 		t.Fatalf("trade fees %v != summary %v", fees, s.Fees)
 	}
+	// freqtrade's own ratios ride along unchanged, absent ones stay nil.
+	for name, c := range map[string]struct {
+		got  *float64
+		want float64
+	}{
+		"sharpe": {s.Sharpe, 0.058172}, "sortino": {s.Sortino, 0.278908}, "calmar": {s.Calmar, 2.248058},
+		"profit_factor": {s.ProfitFactor, 1.280345}, "winrate": {s.WinRatePct, 27.272727}, "holding_avg_s": {s.HoldingAvgS, 2646960},
+	} {
+		if c.got == nil || !near(*c.got, c.want) {
+			t.Errorf("%s: %v, want %v", name, c.got, c.want)
+		}
+	}
+	if s2, _, _ := summarize("X", ftStrategy{TotalTrades: 0}); s2.Sharpe != nil || s2.WinRatePct != nil || s2.HoldingAvgS != nil {
+		t.Fatalf("absent ratios must stay nil: %+v", s2)
+	}
+	// freqtrade writes -100 when a ratio's denominator is zero: no figure, not a terrible one.
+	undef := -100.0
+	if s3, _, _ := summarize("X", ftStrategy{Sharpe: &undef, Sortino: &undef, Calmar: &undef, ProfitFactor: &undef}); s3.Sharpe != nil || s3.Sortino != nil || s3.Calmar != nil || s3.ProfitFactor == nil {
+		t.Fatalf("-100 sentinel: %+v", s3)
+	}
 	if _, _, err := ParseResult("testdata/emacross-2023-10.zip", "Other"); err == nil {
 		t.Fatal("a strategy not in the result must fail")
 	}

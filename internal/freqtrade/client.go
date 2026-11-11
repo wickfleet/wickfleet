@@ -52,6 +52,11 @@ type Profit struct {
 	TradeCount       int     `json:"trade_count"`
 	WinningTrades    int     `json:"winning_trades"`
 	LosingTrades     int     `json:"losing_trades"`
+	// Ratios of the account over closed trades, current is from the last peak.
+	MaxDrawdown        float64 `json:"max_drawdown"`
+	MaxDrawdownAbs     float64 `json:"max_drawdown_abs"`
+	CurrentDrawdown    float64 `json:"current_drawdown"`
+	CurrentDrawdownAbs float64 `json:"current_drawdown_abs"`
 }
 
 // Balance is the part of /api/v1/balance the hub needs.
@@ -115,6 +120,27 @@ func (c Client) Trades(ctx context.Context) ([]Trade, error) {
 		return nil, err
 	}
 	return append(all, open...), nil
+}
+
+// OpenTrade is the risk part of one trade from /api/v1/status.
+type OpenTrade struct {
+	Pair          string   `json:"pair"`
+	Base          string   `json:"base_currency"`
+	Quote         string   `json:"quote_currency"`
+	Amount        float64  `json:"amount"`
+	StakeAmount   float64  `json:"stake_amount"`
+	OpenRate      float64  `json:"open_rate"`
+	CurrentRate   float64  `json:"current_rate"`
+	StopLossAbs   *float64 `json:"stop_loss_abs"`
+	StopDistRatio *float64 `json:"stoploss_current_dist_ratio"` // (stop - current) / current
+	ProfitRatio   float64  `json:"profit_ratio"`
+	OpenDate      string   `json:"open_date"`
+}
+
+// Status is the bot's open trades.
+func (c Client) Status(ctx context.Context) ([]OpenTrade, error) {
+	var out []OpenTrade
+	return out, c.get(ctx, "status", nil, &out)
 }
 
 // Timeframe is the bot's candle timeframe from /api/v1/show_config.
