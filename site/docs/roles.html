@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roles and login in Wickfleet - Wickfleet</title>
+<meta name="description" content="Viewer, operator and admin roles in Wickfleet, with the hub's built-in login or any OIDC provider through oauth2-proxy.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/roles">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Roles and login in Wickfleet - Wickfleet">
+<meta property="og:description" content="Viewer, operator and admin roles in Wickfleet, with the hub's built-in login or any OIDC provider through oauth2-proxy.">
+<meta property="og:url" content="https://wickfleet.com/docs/roles">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Roles and login in Wickfleet - Wickfleet">
+<meta name="twitter:description" content="Viewer, operator and admin roles in Wickfleet, with the hub's built-in login or any OIDC provider through oauth2-proxy.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"Roles and login","item":"https://wickfleet.com/docs/roles"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install">Install</a></li>
+    <li><a href="/docs/roles" aria-current="page">Roles and login</a></li>
+    <li><a href="/docs/compare">Compare</a></li>
+    <li><a href="/docs/risk">Risk</a></li>
+    <li><a href="/docs/demo">Demo mode</a></li>
+    <li><a href="/docs/faq">FAQ</a></li>
+  </ul>
+<h1>Roles and login</h1>
+<p class="lede">People log in once and get a role. Nobody handles a bot API password: the hub adds each bot's key per request, after it has checked the role and the owner.</p>
+<h2>Roles</h2>
+<div class="table"><table>
+<thead><tr><th>Role</th><th>Can</th></tr></thead>
+<tbody>
+<tr><td>viewer</td><td>read their own bots. No money figures on Compare and Risk</td></tr>
+<tr><td>operator</td><td>read and change their own bots, run replays and comparisons of them</td></tr>
+<tr><td>admin</td><td>everything, on every bot, plus the watchlist</td></tr>
+</tbody>
+</table></div>
+<p>Every write needs the header <code>X-Wickfleet-Request: 1</code>, which another site cannot send with your cookie. Operators always own what they create. Only admins set an owner.</p>
+<h2>Login modes</h2>
+<div class="table"><table>
+<thead><tr><th><code>WICKFLEET_AUTH</code></th><th>Who says who you are</th></tr></thead>
+<tbody>
+<tr><td><code>builtin</code></td><td>the hub: local users with argon2id hashes, one role each. The quick start uses this</td></tr>
+<tr><td><code>proxy</code> (default)</td><td>oauth2-proxy in front of the hub, so any OIDC provider (Kanidm, Keycloak, Authentik and others). Roles come from IdP groups</td></tr>
+<tr><td><code>demo</code></td><td>nobody: every visitor is the viewer <code>demo</code>. See <a href="/docs/demo">Demo mode</a></td></tr>
+</tbody>
+</table></div>
+<h2>Built-in login</h2>
+<div class="table"><table>
+<thead><tr><th></th><th></th></tr></thead>
+<tbody>
+<tr><td>First admin</td><td><code>wickfleet-hub setup-token</code> in the hub container prints a one-time token, valid 1 hour. <code>/hub/login</code> asks for it while no user exists</td></tr>
+<tr><td>More users</td><td><code>wickfleet-hub user add &lt;name&gt; &lt;role&gt;</code> with the password on stdin, <code>user del</code>, <code>user list</code>. A running hub picks the change up at once</td></tr>
+<tr><td>Session</td><td>cookie, <code>Secure</code>, <code>HttpOnly</code>, <code>SameSite=Strict</code>, 12 hours, kept in memory</td></tr>
+<tr><td>Sign out</td><td><code>/hub/login?signout</code></td></tr>
+<tr><td>Rate limit</td><td>5 failed logins per user and address, 20 per address, in 15 minutes</td></tr>
+</tbody>
+</table></div>
+<h2>OIDC through oauth2-proxy</h2>
+<p>oauth2-proxy handles the login and sends the user and groups as headers. The hub trusts those headers only next to a shared key the proxy adds (<code>WICKFLEET_AUTHZ_KEY_FILE</code>). Client copies of identity headers are dropped in every mode.</p>
+<div class="table"><table>
+<thead><tr><th>IdP group</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td><code>trade_viewers</code></td><td>viewer</td></tr>
+<tr><td><code>trade_operators</code></td><td>operator</td></tr>
+<tr><td><code>trade_admins</code></td><td>admin</td></tr>
+</tbody>
+</table></div>
+<p>Names are matched on the part before <code>@</code>. <code>WICKFLEET_ROLE_GROUPS</code> replaces the mapping, for example <code>players=viewer,admins=admin</code>.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wickfleet FAQ - Wickfleet</title>
+<meta name="description" content="Questions about Wickfleet: how it differs from FreqUI's own multi-bot view, live trading, exchanges, and what it costs.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/faq">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Wickfleet FAQ - Wickfleet">
+<meta property="og:description" content="Questions about Wickfleet: how it differs from FreqUI's own multi-bot view, live trading, exchanges, and what it costs.">
+<meta property="og:url" content="https://wickfleet.com/docs/faq">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wickfleet FAQ - Wickfleet">
+<meta name="twitter:description" content="Questions about Wickfleet: how it differs from FreqUI's own multi-bot view, live trading, exchanges, and what it costs.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"FAQ","item":"https://wickfleet.com/docs/faq"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How is Wickfleet different from FreqUI's own multi-bot view?","acceptedAnswer":{"@type":"Answer","text":"Wickfleet is built on FreqUI, not instead of it. FreqUI is the cockpit for one bot, and it already handles several: you add each bot's URL and login in the browser, switch between them, and its bot comparison view shows them side by side. With one or two bots that is often all you need. FreqUI deliberately has no backend of its own. Its maintainer has explained why in the issue tracker (#1094, #2565): there is no main server to keep shared settings, making one bot the master is wrong because that bot may be replaced tomorrow, pushing credentials to every bot is not acceptable, and a user-supplied backend would be unmaintainable. He also keeps balance out of the summary row on purpose, because a total that mixes dry and live money, or USDT and BTC, means nothing. Those are sound reasons for a UI that talks to bots directly. Wickfleet adds the server FreqUI chose not to have, and keeps FreqUI for everything about a single bot. For someone running three or more bots that means: The bot list lives on the server, so every browser and device sees the same fleet without adding bots again Bot API keys stay on the server. You log in once, the hub adds each bot's key per request A git-backed registry: every bot and strategy is a file, every change is a commit, and the hub starts and stops the containers to match A replay gate: lookahead and recursive analysis plus a walk-forward and Monte Carlo verdict, which live trading requires Fleet views that total per stake currency and keep dry and live apart, plus Compare and Risk across bots Roles (viewer, operator, admin) when you want to show the fleet to someone without letting them trade The cost is one more service to run. If you do not need any of that, plain FreqUI is simpler."}},{"@type":"Question","name":"Should I put Wickfleet on the internet?","acceptedAnswer":{"@type":"Answer","text":"Keep it private by default: run it on your own machine, or on a server you reach over a VPN such as Tailscale, NetBird or WireGuard. If it has to be public, put it behind your own reverse proxy with TLS and single sign-on and run the hub in proxy mode with oauth2-proxy in front. Bot API keys and exchange keys stay on the host that runs the bots and never reach the browser."}},{"@type":"Question","name":"Where do I get help?","acceptedAnswer":{"@type":"Answer","text":"Bugs and feature requests: GitHub issues, with a template for each. Questions about Freqtrade itself, strategies and exchanges belong in the Freqtrade Discord. Issues are triaged in the evenings, so expect a day or two."}},{"@type":"Question","name":"Is Wickfleet a fork of FreqUI?","acceptedAnswer":{"@type":"Answer","text":"The UI is: wickfleet-ui is a fork of FreqUI with the Wickfleet pages added, kept close to upstream. The hub is new code in Go. Both are GPL-3.0."}},{"@type":"Question","name":"Does it trade real money?","acceptedAnswer":{"@type":"Answer","text":"Not by default. Every bot is a dry run on a simulated wallet. Live trading needs an explicit switch on the instance and on the bot, a passing replay of exactly those settings from the last 7 days, and exchange keys from files on the host. Nothing on this site is financial advice."}},{"@type":"Question","name":"Which exchanges work?","acceptedAnswer":{"@type":"Answer","text":"Any exchange Freqtrade supports, set per bot. The examples use Binance because it has deep candle history for replays."}},{"@type":"Question","name":"Can I keep my existing Freqtrade bots?","acceptedAnswer":{"@type":"Answer","text":"Wickfleet runs the bots it manages in its own containers from the registry. A bot becomes a registry file: exchange, pairs, stake and strategy. A hand-written strategy .py in the registry runs as is."}},{"@type":"Question","name":"What does it cost?","acceptedAnswer":{"@type":"Answer","text":"Nothing. It is free software under the GPL-3.0, you run it on your own machine."}},{"@type":"Question","name":"Does the strategy builder use AI?","acceptedAnswer":{"@type":"Answer","text":"Optionally. A spec can be built from blocks without any model. Drafting a spec from a sentence needs an Ollama or Anthropic endpoint you configure, and the model only proposes JSON that the hub validates against a whitelist."}}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install">Install</a></li>
+    <li><a href="/docs/roles">Roles and login</a></li>
+    <li><a href="/docs/compare">Compare</a></li>
+    <li><a href="/docs/risk">Risk</a></li>
+    <li><a href="/docs/demo">Demo mode</a></li>
+    <li><a href="/docs/faq" aria-current="page">FAQ</a></li>
+  </ul>
+<h1>FAQ</h1>
+<h2>How is Wickfleet different from FreqUI's own multi-bot view?</h2>
+<p>Wickfleet is built on FreqUI, not instead of it. FreqUI is the cockpit for one bot, and it already handles several: you add each bot's URL and login in the browser, switch between them, and its bot comparison view shows them side by side. With one or two bots that is often all you need.</p>
+<p>FreqUI deliberately has no backend of its own. Its maintainer has explained why in the issue tracker (<a href="https://github.com/freqtrade/frequi/issues/1094">#1094</a>, <a href="https://github.com/freqtrade/frequi/issues/2565">#2565</a>): there is no main server to keep shared settings, making one bot the master is wrong because that bot may be replaced tomorrow, pushing credentials to every bot is not acceptable, and a user-supplied backend would be unmaintainable. He also keeps balance out of the summary row on purpose, because a total that mixes dry and live money, or USDT and BTC, means nothing. Those are sound reasons for a UI that talks to bots directly.</p>
+<p>Wickfleet adds the server FreqUI chose not to have, and keeps FreqUI for everything about a single bot. For someone running three or more bots that means:</p>
+<ul>
+  <li>The bot list lives on the server, so every browser and device sees the same fleet without adding bots again</li>
+  <li>Bot API keys stay on the server. You log in once, the hub adds each bot's key per request</li>
+  <li>A git-backed registry: every bot and strategy is a file, every change is a commit, and the hub starts and stops the containers to match</li>
+  <li>A replay gate: lookahead and recursive analysis plus a walk-forward and Monte Carlo verdict, which live trading requires</li>
+  <li>Fleet views that total per stake currency and keep dry and live apart, plus Compare and Risk across bots</li>
+  <li>Roles (viewer, operator, admin) when you want to show the fleet to someone without letting them trade</li>
+</ul>
+<p>The cost is one more service to run. If you do not need any of that, plain FreqUI is simpler.</p>
+<h2>Should I put Wickfleet on the internet?</h2>
+<p>Keep it private by default: run it on your own machine, or on a server you reach over a VPN such as Tailscale, NetBird or WireGuard. If it has to be public, put it behind your own reverse proxy with TLS and single sign-on and run the hub in <code>proxy</code> mode with oauth2-proxy in front. Bot API keys and exchange keys stay on the host that runs the bots and never reach the browser.</p>
+<h2>Where do I get help?</h2>
+<p>Bugs and feature requests: <a href="https://github.com/wickfleet/wickfleet/issues">GitHub issues</a>, with a template for each. Questions about Freqtrade itself, strategies and exchanges belong in the <a href="https://www.freqtrade.io/en/stable/#help-discord">Freqtrade Discord</a>. Issues are triaged in the evenings, so expect a day or two.</p>
+<h2>Is Wickfleet a fork of FreqUI?</h2>
+<p>The UI is: <a href="https://github.com/wickfleet/wickfleet-ui">wickfleet-ui</a> is a fork of FreqUI with the Wickfleet pages added, kept close to upstream. The hub is new code in Go. Both are GPL-3.0.</p>
+<h2>Does it trade real money?</h2>
+<p>Not by default. Every bot is a dry run on a simulated wallet. Live trading needs an explicit switch on the instance and on the bot, a passing replay of exactly those settings from the last 7 days, and exchange keys from files on the host. Nothing on this site is financial advice.</p>
+<h2>Which exchanges work?</h2>
+<p>Any exchange Freqtrade supports, set per bot. The examples use Binance because it has deep candle history for replays.</p>
+<h2>Can I keep my existing Freqtrade bots?</h2>
+<p>Wickfleet runs the bots it manages in its own containers from the registry. A bot becomes a registry file: exchange, pairs, stake and strategy. A hand-written strategy <code>.py</code> in the registry runs as is.</p>
+<h2>What does it cost?</h2>
+<p>Nothing. It is free software under the GPL-3.0, you run it on your own machine.</p>
+<h2>Does the strategy builder use AI?</h2>
+<p>Optionally. A spec can be built from blocks without any model. Drafting a spec from a sentence needs an Ollama or Anthropic endpoint you configure, and the model only proposes JSON that the hub validates against a whitelist.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

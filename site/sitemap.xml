@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://wickfleet.com/</loc></url>
+  <url><loc>https://wickfleet.com/docs/</loc></url>
+  <url><loc>https://wickfleet.com/docs/install</loc></url>
+  <url><loc>https://wickfleet.com/docs/roles</loc></url>
+  <url><loc>https://wickfleet.com/docs/compare</loc></url>
+  <url><loc>https://wickfleet.com/docs/risk</loc></url>
+  <url><loc>https://wickfleet.com/docs/demo</loc></url>
+  <url><loc>https://wickfleet.com/docs/faq</loc></url>
 </urlset>

@@ -1,0 +1,59 @@
+name: Bug
+description: Something in Wickfleet does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Leave out exchange keys, bot API passwords, setup tokens and real hostnames.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. make quickstart
+        2. open /compare
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: hub and UI image tags (or commit), freqtrade image tag.
+      placeholder: hub 0.2.0, ui 0.2.0, freqtrade 2026.10
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: Setup
+      options:
+        - compose quick start
+        - compose, own changes
+        - other
+    validations:
+      required: true
+  - type: dropdown
+    id: auth
+    attributes:
+      label: Login mode
+      options:
+        - builtin
+        - proxy (oauth2-proxy)
+        - demo
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Hub log lines around the problem, e.g. `docker compose --project-directory deploy/compose logs hub --since 10m`.
+      render: text
