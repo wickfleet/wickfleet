@@ -10,14 +10,20 @@ checks, before it starts.
 This repository holds the **hub**: the one service between the reverse proxy
 and the bots. The browser UI is a FreqUI fork in its own repository.
 
+![Compare and Risk pages on the quick start, as a viewer](docs/img/wickfleet.gif)
+
 > Status: early. Bots run in dry-run mode by default. Not financial advice, see
 > [Disclaimer](#disclaimer).
 
-![Fleet overview](docs/img/fleet.png)
+Docs: [wickfleet.com/docs](https://wickfleet.com/docs/). Read-only demo:
+[demo.wickfleet.com](https://demo.wickfleet.com/). Release notes:
+[docs/releases](docs/releases/).
+
+![Fleet overview, amounts blurred](docs/img/fleet.png)
 
 | Strategy from blocks, read back in plain words | Replay with bias checks and robustness verdict |
 |---|---|
-| ![Strategy editor](docs/img/strategy.png) | ![Replay](docs/img/replay.png) |
+| ![Strategy editor](docs/img/strategy.png) | ![Replay, amounts blurred](docs/img/replay.png) |
 
 ## Quick start
 
@@ -397,6 +403,19 @@ Pick a model with the eval:
 ```sh
 bin/wickfleet-strategy eval -ollama http://host:11434 -model a,b internal/drafter/testdata/eval.json
 ```
+
+## Exposure and support
+
+Keep an instance private: on your own machine, or on a server you reach over a
+VPN such as Tailscale, NetBird or WireGuard. Public only behind your own reverse
+proxy with TLS and single sign-on, in `proxy` mode. Bot and exchange keys stay
+on the host that runs the bots.
+
+| Need | Where |
+|---|---|
+| Bug or feature | [GitHub issues](https://github.com/wickfleet/wickfleet/issues), one template each |
+| Freqtrade questions | the [Freqtrade Discord](https://www.freqtrade.io/en/stable/#help-discord) |
+| Vulnerability | [SECURITY.md](SECURITY.md), privately |
 
 ## Develop
 

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compare Freqtrade bots side by side - Wickfleet</title>
+<meta name="description" content="Replay several Freqtrade bots over the same window and line up profit, drawdown, ratios and a robustness verdict per bot.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/compare">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Compare Freqtrade bots side by side - Wickfleet">
+<meta property="og:description" content="Replay several Freqtrade bots over the same window and line up profit, drawdown, ratios and a robustness verdict per bot.">
+<meta property="og:url" content="https://wickfleet.com/docs/compare">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Compare Freqtrade bots side by side - Wickfleet">
+<meta name="twitter:description" content="Replay several Freqtrade bots over the same window and line up profit, drawdown, ratios and a robustness verdict per bot.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"Compare","item":"https://wickfleet.com/docs/compare"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install">Install</a></li>
+    <li><a href="/docs/roles">Roles and login</a></li>
+    <li><a href="/docs/compare" aria-current="page">Compare</a></li>
+    <li><a href="/docs/risk">Risk</a></li>
+    <li><a href="/docs/demo">Demo mode</a></li>
+    <li><a href="/docs/faq">FAQ</a></li>
+  </ul>
+<h1>Compare bots</h1>
+<p class="lede">Pick two or more bots and a date range. Wickfleet replays each one over the same window, with its own pairs, strategy, timeframe and stake, and lines the results up.</p>
+<figure class="shot"><img src="/img/compare.png" alt="Compare page as a viewer: three bots with return, drawdown, ratios, walk-forward windows and verdict, and their return curves, amounts hidden" width="1440" height="900" loading="lazy"><figcaption>Three dry-run example bots over 18 months on the quick start, seen as a viewer</figcaption></figure>
+<h2>What you see</h2>
+<div class="table"><table>
+<thead><tr><th>Column</th><th>From</th></tr></thead>
+<tbody>
+<tr><td>Profit, buy and hold</td><td>freqtrade's backtest result for the bot's own config, fees included</td></tr>
+<tr><td>Max drawdown</td><td>freqtrade's <code>max_relative_drawdown</code></td></tr>
+<tr><td>Sharpe, Sortino, Calmar, profit factor</td><td>freqtrade's own figures. Left out when freqtrade has none</td></tr>
+<tr><td>Win rate, trades, average hold</td><td>the backtest result</td></tr>
+<tr><td>Windows</td><td>walk-forward: the range in 30-day windows, how many were profitable</td></tr>
+<tr><td>MC DD (95%)</td><td>Monte Carlo: 10,000 resamples of the trades, the drawdown 95% of them stay under</td></tr>
+<tr><td>Verdict</td><td>the robustness verdict of the replay: pass, fail, or biased when the lookahead check found a bias</td></tr>
+<tr><td>Return curve</td><td>start balance plus each trade's net profit on the day it closed, one point per day</td></tr>
+</tbody>
+</table></div>
+<h2>How it runs</h2>
+<ul>
+  <li>Each bot is an ordinary replay job: <code>download-data</code> into the shared candle store, then <code>backtesting</code>, then freqtrade's lookahead and recursive analysis</li>
+  <li>The comparison queues one bot at a time, so it never holds more than one replay slot. At most 2 comparisons run at once and 12 bots go in one</li>
+  <li>The newest 50 comparisons are kept on disk, so a restart or a read-only demo still shows them</li>
+  <li>A bot whose replay fails is listed with its error, never with zeros</li>
+</ul>
+<h2>Who sees what</h2>
+<div class="table"><table>
+<thead><tr><th>Role</th><th>Compare</th></tr></thead>
+<tbody>
+<tr><td>admin</td><td>all comparisons, with money</td></tr>
+<tr><td>operator</td><td>their own bots, with money</td></tr>
+<tr><td>viewer, demo</td><td>percentages, ratios, counts and verdicts. Balances, absolute profit and equity in currency are removed on the server, the curve stays as return %</td></tr>
+</tbody>
+</table></div>
+<p>A comparison describes the past. A bot that wins over one window can lose over the next, which is why the walk-forward and Monte Carlo columns sit next to the profit.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

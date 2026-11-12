@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Freqtrade questions (strategies, exchanges, freqtrade itself)
+    url: https://www.freqtrade.io/en/stable/#help-discord
+    about: The Freqtrade Discord. Wickfleet issues are for Wickfleet bugs and features.
+  - name: Security vulnerability
+    url: https://github.com/wickfleet/wickfleet/blob/main/SECURITY.md
+    about: Report it privately, not as an issue.

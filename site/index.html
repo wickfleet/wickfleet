@@ -28,7 +28,11 @@
 <body>
 <header class="wrap top">
   <a class="brand" href="./"><img src="favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
-  <a class="gh" href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
 </header>
 
 <main>
@@ -40,14 +44,16 @@
       <li><strong>No bot passwords.</strong> People log in once and get a role. Every bot runs in its own container behind one origin.</li>
     </ul>
     <p class="cta"><a class="button" href="https://github.com/wickfleet/wickfleet">Get it on GitHub</a> <a class="button ghost" href="#quick-start">Quick start</a></p>
-    <figure class="shot lead"><img src="img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot" width="1440" height="900"></figure>
+    <figure class="shot lead"><img src="img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot, amounts blurred" width="1440" height="900"></figure>
   </section>
 
   <section class="wrap">
     <h2>What it looks like</h2>
     <div class="grid">
       <figure class="shot"><img src="img/strategy.png" alt="Strategy editor with Blockly blocks and a plain-words readback" width="1440" height="900" loading="lazy"><figcaption>Strategy from blocks, read back in plain words</figcaption></figure>
-      <figure class="shot"><img src="img/replay.png" alt="Replay summary with bias checks and robustness verdict" width="1440" height="900" loading="lazy"><figcaption>Replay with bias checks and a robustness verdict</figcaption></figure>
+      <figure class="shot"><img src="img/replay.png" alt="Replay summary with bias checks and robustness verdict, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>Replay with bias checks and a robustness verdict</figcaption></figure>
+      <figure class="shot"><img src="img/compare.png" alt="Compare page with three bots replayed over the same window" width="1440" height="900" loading="lazy"><figcaption>Several bots replayed over one window, side by side</figcaption></figure>
+      <figure class="shot"><img src="img/risk.png" alt="Risk page as a viewer: open trades and drawdown per bot, pair overlap" width="1440" height="900" loading="lazy"><figcaption>Open trades, drawdown and overlap across the fleet</figcaption></figure>
       <figure class="shot"><img src="img/trade.png" alt="FreqUI trade view of one bot" width="1440" height="900" loading="lazy"><figcaption>Each bot in the FreqUI trade view</figcaption></figure>
       <figure class="shot"><img src="img/first-admin.png" alt="First admin setup with a one-time token" width="1440" height="900" loading="lazy"><figcaption>First admin from a one-time token, no default password</figcaption></figure>
     </div>
@@ -59,7 +65,7 @@
 <pre><code>git clone https://github.com/wickfleet/wickfleet.git
 cd wickfleet
 make quickstart</code></pre>
-    <p>The script prints a one-time setup token. Open <code>http://localhost:8000/hub/login</code>, create the first admin, and a dry-run demo bot is already waiting in the fleet.</p>
+    <p>The script prints a one-time setup token. Open <code>http://localhost:8000/hub/login</code>, create the first admin, and a dry-run demo bot is already waiting in the fleet. More in the <a href="/docs/install">install guide</a>.</p>
   </section>
 
   <section class="wrap">
@@ -79,6 +85,14 @@ make quickstart</code></pre>
 </main>
 
 <footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
   <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
   <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>.</p>
   <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>

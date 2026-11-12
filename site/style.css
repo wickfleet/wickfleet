@@ -33,8 +33,9 @@ img { max-width: 100%; height: auto; display: block; }
 .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
 .top { display: flex; align-items: center; justify-content: space-between; padding-top: 20px; padding-bottom: 20px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; color: var(--text); text-decoration: none; }
-.gh { color: var(--muted); text-decoration: none; font-weight: 600; }
-.gh:hover { color: var(--text); }
+.nav { display: flex; gap: 18px; flex-wrap: wrap; }
+.gh, .nav a { color: var(--muted); text-decoration: none; font-weight: 600; }
+.gh:hover, .nav a:hover, .nav a[aria-current] { color: var(--text); }
 h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.15; margin: 32px 0 20px; letter-spacing: -0.02em; max-width: 18em; }
 h2 { font-size: 24px; margin: 56px 0 16px; }
 .points { list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 12px; max-width: 46em; }
@@ -54,6 +55,27 @@ p code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-
 .plain li { margin-bottom: 8px; }
 .notice > p { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; max-width: 46em; }
 .foot { margin-top: 64px; padding-top: 24px; padding-bottom: 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+.foot nav { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; }
+.docnav { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 8px; padding: 0; list-style: none; }
+.docnav a { display: inline-block; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); text-decoration: none; font-size: 15px; }
+.docnav a:hover { color: var(--text); }
+.docnav a[aria-current] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.doc { max-width: 52em; }
+.doc h1 { font-size: clamp(28px, 4vw, 38px); margin-top: 24px; }
+.doc h2 { font-size: 22px; margin: 40px 0 12px; }
+.doc .lede { color: var(--muted); font-size: 18px; }
+.doc li { margin-bottom: 6px; }
+.doc .shot { margin: 20px 0; }
+.table { overflow-x: auto; margin: 12px 0 20px; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 600; }
+td code, li code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; overflow-wrap: anywhere; }
+.cards { list-style: none; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.cards a { display: block; height: 100%; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--text); }
+.cards a span { display: block; color: var(--muted); font-size: 15px; margin-top: 4px; }
+.cards a:hover { border-color: var(--accent); }
 @media (max-width: 480px) {
+  .top { flex-wrap: wrap; gap: 10px; }
   pre { font-size: 13px; }
 }

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleet risk across Freqtrade bots - Wickfleet</title>
+<meta name="description" content="Capital at stake, exposure per coin and pair, drawdown and stoploss distance across every Freqtrade bot you can see.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/risk">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Fleet risk across Freqtrade bots - Wickfleet">
+<meta property="og:description" content="Capital at stake, exposure per coin and pair, drawdown and stoploss distance across every Freqtrade bot you can see.">
+<meta property="og:url" content="https://wickfleet.com/docs/risk">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fleet risk across Freqtrade bots - Wickfleet">
+<meta name="twitter:description" content="Capital at stake, exposure per coin and pair, drawdown and stoploss distance across every Freqtrade bot you can see.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"Risk","item":"https://wickfleet.com/docs/risk"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install">Install</a></li>
+    <li><a href="/docs/roles">Roles and login</a></li>
+    <li><a href="/docs/compare">Compare</a></li>
+    <li><a href="/docs/risk" aria-current="page">Risk</a></li>
+    <li><a href="/docs/demo">Demo mode</a></li>
+    <li><a href="/docs/faq">FAQ</a></li>
+  </ul>
+<h1>Fleet risk</h1>
+<p class="lede">One page for what the fleet holds right now: open trades, capital at stake, exposure per coin and per pair, drawdown and stoploss distance, read live from each bot.</p>
+<figure class="shot"><img src="/img/risk.png" alt="Risk page as a viewer: open trades and drawdown now and worst per bot, pair overlap, stake and exposure hidden" width="1440" height="900" loading="lazy"><figcaption>Four dry-run bots on the quick start, seen as a viewer</figcaption></figure>
+<h2>What you see</h2>
+<div class="table"><table>
+<thead><tr><th>Section</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>At stake</td><td>stake in open trades, per stake currency, against the bots' wallets</td></tr>
+<tr><td>Bots</td><td>open trades against the limit, stake, drawdown now against the worst so far</td></tr>
+<tr><td>Exposure per coin</td><td>one line per base coin across pairs and bots. The amount sums, the value stays per currency</td></tr>
+<tr><td>Exposure per pair</td><td>stake per pair across bots and its share of the total</td></tr>
+<tr><td>Open trades and their stops</td><td>each open trade with its profit and the distance to its stoploss</td></tr>
+<tr><td>Pair overlap</td><td>configured pairs that two or more bots trade, so one move hits several bots</td></tr>
+</tbody>
+</table></div>
+<h2>Where the numbers come from</h2>
+<ul>
+  <li>The hub reads <code>/status</code>, <code>/profit</code> and <code>/balance</code> of each bot you may see, and caches them for 30 s</li>
+  <li>Money is summed per stake currency, and dry and live are never added together. A USDT bot and a BTC bot stay two lines</li>
+  <li>Drawdown is freqtrade's <code>current_drawdown</code> against <code>max_drawdown</code> over closed trades</li>
+  <li>A bot that does not answer is listed with its error and left out of every sum</li>
+</ul>
+<h2>Who sees what</h2>
+<p>Admins see every bot, operators their own. Viewers and demo visitors get counts and percentages, with no stake, value or exposure lists.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Read-only demo mode - Wickfleet</title>
+<meta name="description" content="Run Wickfleet as a public read-only demo: every visitor is a viewer, writes are refused and no money figures leave the server.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/demo">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Read-only demo mode - Wickfleet">
+<meta property="og:description" content="Run Wickfleet as a public read-only demo: every visitor is a viewer, writes are refused and no money figures leave the server.">
+<meta property="og:url" content="https://wickfleet.com/docs/demo">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Read-only demo mode - Wickfleet">
+<meta name="twitter:description" content="Run Wickfleet as a public read-only demo: every visitor is a viewer, writes are refused and no money figures leave the server.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"Demo mode","item":"https://wickfleet.com/docs/demo"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install">Install</a></li>
+    <li><a href="/docs/roles">Roles and login</a></li>
+    <li><a href="/docs/compare">Compare</a></li>
+    <li><a href="/docs/risk">Risk</a></li>
+    <li><a href="/docs/demo" aria-current="page">Demo mode</a></li>
+    <li><a href="/docs/faq">FAQ</a></li>
+  </ul>
+<h1>Demo mode</h1>
+<p class="lede">With <code>WICKFLEET_AUTH=demo</code> the hub runs a public read-only instance. Try one at <a href="https://demo.wickfleet.com/">demo.wickfleet.com</a>.</p>
+<h2>What changes</h2>
+<div class="table"><table>
+<thead><tr><th></th><th>In demo mode</th></tr></thead>
+<tbody>
+<tr><td>Who you are</td><td>every visitor is the viewer <code>demo</code> and sees the bots with <code>owner: demo</code></td></tr>
+<tr><td>Writes</td><td>the hub answers only GET, HEAD and OPTIONS. Everything else is 403</td></tr>
+<tr><td>Bots</td><td>calls to a bot pass only as reads, plus the FreqUI token login</td></tr>
+<tr><td>Money</td><td>viewer rules: no balances, absolute profit or exposure lists</td></tr>
+<tr><td>Compare</td><td>shows comparisons already on disk, refuses new ones</td></tr>
+<tr><td>Identity headers</td><td>client <code>X-Auth-Request-*</code> headers are dropped</td></tr>
+<tr><td>Live trading</td><td>the hub refuses to start when <code>WICKFLEET_LIVE_TRADING</code> is on</td></tr>
+</tbody>
+</table></div>
+<h2>Run your own</h2>
+<ol>
+  <li>Start from <code>examples/registry</code>, with the two bots in <code>examples/demo/bots/</code> in place of <code>bots/demo.yaml</code>. Both are dry runs owned by <code>demo</code></li>
+  <li>Set <code>WICKFLEET_AUTH=demo</code> on the hub</li>
+  <li>Keep the registry read-only: leave <code>WICKFLEET_REGISTRY_WRITE_URL</code> unset</li>
+  <li>To show a comparison, run it on an instance with a login over the same registry and state dir, then switch to demo mode</li>
+</ol>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

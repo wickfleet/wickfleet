@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install Wickfleet with Docker Compose - Wickfleet</title>
+<meta name="description" content="Run Wickfleet on one machine with the Docker Compose quick start: built-in login, a dry-run demo bot and a local git registry.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/install">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Install Wickfleet with Docker Compose - Wickfleet">
+<meta property="og:description" content="Run Wickfleet on one machine with the Docker Compose quick start: built-in login, a dry-run demo bot and a local git registry.">
+<meta property="og:url" content="https://wickfleet.com/docs/install">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Install Wickfleet with Docker Compose - Wickfleet">
+<meta name="twitter:description" content="Run Wickfleet on one machine with the Docker Compose quick start: built-in login, a dry-run demo bot and a local git registry.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"Install","item":"https://wickfleet.com/docs/install"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install" aria-current="page">Install</a></li>
+    <li><a href="/docs/roles">Roles and login</a></li>
+    <li><a href="/docs/compare">Compare</a></li>
+    <li><a href="/docs/risk">Risk</a></li>
+    <li><a href="/docs/demo">Demo mode</a></li>
+    <li><a href="/docs/faq">FAQ</a></li>
+  </ul>
+<h1>Install with Docker Compose</h1>
+<p class="lede">The quick start runs the whole stack on one machine, bound to 127.0.0.1: built-in login, a dry-run demo bot and a local git registry.</p>
+<h2>Needs</h2>
+<ul>
+  <li>Docker with Compose v2, git and make</li>
+  <li>macOS or Linux. On Linux the stack runs as uid 1000, freqtrade's own user</li>
+  <li>Network access to pull images and, for replays, candles from the exchange</li>
+</ul>
+<h2>Start it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<div class="table"><table>
+<thead><tr><th>Step</th><th>What happens</th></tr></thead>
+<tbody>
+<tr><td>Registry</td><td><code>examples/registry</code> is copied to <code>deploy/compose/data/registry</code> and made a git repo. Bots and strategies saved in the UI become commits there</td></tr>
+<tr><td>Stack</td><td>Traefik, the hub with built-in login, the UI, the docker guard and two socket proxies start from <code>deploy/compose/compose.yml</code></td></tr>
+<tr><td>Demo bot</td><td>the hub starts <code>demo</code>, a dry-run bot on the EmaCross example (BTC, ETH, SOL on Binance), within about 30 s</td></tr>
+<tr><td>First admin</td><td>the script prints a one-time setup token, valid for 1 hour. Open <code>http://localhost:8000/hub/login</code>, enter it and create the user <code>admin</code>, who owns the demo bot</td></tr>
+</tbody>
+</table></div>
+<figure class="shot"><img src="/img/first-admin.png" alt="First admin setup with a one-time token" width="1440" height="900" loading="lazy"><figcaption>The first admin comes from a one-time token. There is no default password</figcaption></figure>
+<p>Then open <code>http://localhost:8000/</code> for the fleet. <code>make quickstart-down</code> stops the stack and the bots. Data stays in <code>deploy/compose/data</code>.</p>
+<h2>Settings</h2>
+<div class="table"><table>
+<thead><tr><th>Variable</th><th>Default</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>WICKFLEET_PORT</code></td><td><code>8000</code></td><td>local port</td></tr>
+<tr><td><code>WICKFLEET_ROOT</code></td><td><code>deploy/compose/data</code></td><td>registry, bot data, candles and state</td></tr>
+<tr><td><code>WICKFLEET_HUB_IMAGE</code></td><td><code>ghcr.io/wickfleet/wickfleet-hub:latest</code></td><td>the quick start builds the hub from your checkout under this name</td></tr>
+<tr><td><code>WICKFLEET_UI_IMAGE</code></td><td><code>ghcr.io/wickfleet/wickfleet-ui:latest</code></td><td>pin a release such as <code>:0.2.0</code></td></tr>
+<tr><td><code>WICKFLEET_FREQTRADE_IMAGE</code></td><td><code>freqtradeorg/freqtrade:2026.10</code>, pinned by digest</td><td>the only image a bot may run</td></tr>
+</tbody>
+</table></div>
+<h2>Upgrade</h2>
+<pre><code>git pull
+docker pull ghcr.io/wickfleet/wickfleet-ui:latest
+make quickstart</code></pre>
+<p>Data in <code>deploy/compose/data</code> is kept. Release notes list any new setting.</p>
+<h2>Where to run it</h2>
+<div class="table"><table>
+<thead><tr><th>Setup</th><th>Advice</th></tr></thead>
+<tbody>
+<tr><td>Default</td><td>keep it private: on your own machine, or on a server you reach over a VPN such as Tailscale, NetBird or WireGuard. The quick start binds to 127.0.0.1 for this reason</td></tr>
+<tr><td>Public</td><td>only behind your own reverse proxy with TLS and single sign-on, in <code>WICKFLEET_AUTH=proxy</code> mode with oauth2-proxy in front. Do not put the built-in login straight on the internet</td></tr>
+<tr><td>Keys</td><td>bot API keys and exchange keys stay on the host that runs the bots. The hub adds a bot's key per request, the browser never holds one</td></tr>
+</tbody>
+</table></div>
+<h2>After the quick start</h2>
+<ul>
+  <li>More users: <code>wickfleet-hub user add &lt;name&gt; &lt;viewer|operator|admin&gt;</code> in the hub container, password on stdin. See <a href="/docs/roles">Roles and login</a></li>
+  <li>Your own bots: add them in the Bots page, or as files in the registry and commit</li>
+  <li>Behind a real domain: the same compose file with your proxy and TLS in front. For single sign-on use <code>WICKFLEET_AUTH=proxy</code> with oauth2-proxy</li>
+</ul>
+<p>Every bot is a dry run on a simulated wallet. Live trading needs <code>WICKFLEET_LIVE_TRADING=true</code> on the instance, <code>dry_run: false</code> on the bot, a passing replay of exactly those settings from the last 7 days, and exchange keys from files on the host. The README has the details.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">Humpf IT</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>
