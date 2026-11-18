@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Freqtrade Docker Compose: many bots, one address - Wickfleet</title>
+<meta name="description" content="Why FreqUI reports a CORS error with several Freqtrade bots in Docker Compose, what each api_server setting does, and how one proxy address avoids it.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/freqtrade-docker-compose">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Freqtrade Docker Compose: many bots, one address - Wickfleet">
+<meta property="og:description" content="Why FreqUI reports a CORS error with several Freqtrade bots in Docker Compose, what each api_server setting does, and how one proxy address avoids it.">
+<meta property="og:url" content="https://wickfleet.com/freqtrade-docker-compose">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Freqtrade Docker Compose: many bots, one address - Wickfleet">
+<meta name="twitter:description" content="Why FreqUI reports a CORS error with several Freqtrade bots in Docker Compose, what each api_server setting does, and how one proxy address avoids it.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Freqtrade Docker Compose: many bots, one address","item":"https://wickfleet.com/freqtrade-docker-compose"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>Freqtrade Docker Compose: many bots, one address</h1>
+<p class="lede">Freqtrade's own <code>docker-compose.yml</code> runs one bot and publishes its API and FreqUI on <code>127.0.0.1:8080</code>. With several bots each one gets its own port, and FreqUI in the browser then talks to several addresses. That is where the CORS error comes from. This page covers what the API settings do, what breaks and why, and how to put every bot behind one address.</p>
+<h2>Where the CORS error comes from</h2>
+<ul>
+  <li>FreqUI is a web app that runs in your browser. Every bot serves a copy of it on its API port</li>
+  <li>To a browser an origin is scheme, host and port. <code>http://localhost:8080</code> and <code>http://localhost:8081</code> are two origins</li>
+  <li>FreqUI loaded from the first bot may only call the second bot's API if that bot lists FreqUI's origin in <code>api_server.CORS_origins</code>. The Freqtrade docs call this the cross-origin case and say the setting is needed only there</li>
+  <li>FreqUI adds a hint to check the CORS configuration to every login that fails for a reason other than a wrong password, when the bot's address is not the address of the page. An unreachable bot gets the same hint, so open <code>&lt;bot address&gt;/api/v1/ping</code> first. It answers <code>{"status":"pong"}</code> when the API is up</li>
+</ul>
+<h2>What the api_server settings do</h2>
+<div class="table"><table>
+<thead><tr><th>Setting</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td><code>enabled</code></td><td>turns the REST API on. FreqUI is served from the same port</td></tr>
+<tr><td><code>listen_ip_address</code></td><td>the address the API binds to. The sample config uses <code>127.0.0.1</code>. In Docker it has to be <code>0.0.0.0</code>, or the published port reaches nothing. Who can reach the bot is then decided by the <code>ports</code> line</td></tr>
+<tr><td><code>listen_port</code></td><td>the port inside the container, <code>8080</code> in the samples</td></tr>
+<tr><td><code>username</code>, <code>password</code></td><td>the API login. FreqUI sends them once and gets two tokens back</td></tr>
+<tr><td><code>jwt_secret_key</code></td><td>signs those tokens: an access token valid for 15 minutes and a refresh token valid for 30 days. The docs ask for a random value of 32 characters or more. Freqtrade logs a security warning when it is still a sample value. A token signed with an old key is no longer accepted, so after a change every browser logs in again</td></tr>
+<tr><td><code>CORS_origins</code></td><td>the list of origins that may call this API from a browser, such as <code>["http://localhost:8080"]</code>. No trailing slash. A <code>*</code> entry is not allowed by the standard for requests with credentials</td></tr>
+<tr><td><code>ws_token</code></td><td>a fixed token for the message websocket at <code>/api/v1/message/ws</code>, for other programs such as a consumer bot in producer and consumer mode. FreqUI does not need it. It opens the same websocket with its access token, and the API accepts either</td></tr>
+</tbody>
+</table></div>
+<h2>What breaks, and why</h2>
+<div class="table"><table>
+<thead><tr><th>What you see</th><th>Cause</th></tr></thead>
+<tbody>
+<tr><td>Login to a second bot fails with the CORS hint</td><td><code>CORS_origins</code> of that bot does not hold the address in your browser bar, or holds it with a trailing slash</td></tr>
+<tr><td>The published port answers nothing</td><td><code>listen_ip_address</code> is still <code>127.0.0.1</code> inside the container</td></tr>
+<tr><td>The API answers from the whole network</td><td>the port is published as <code>"8080:8080"</code>. <code>"127.0.0.1:8080:8080"</code> keeps it on the host. The docs advise against exposing the API to the internet and name an SSH tunnel or a VPN for remote access</td></tr>
+<tr><td>The websocket fails behind nginx</td><td>nginx needs the <code>Upgrade</code> and <code>Connection</code> headers set for websockets. Traefik and Caddy v2 support websockets out of the box</td></tr>
+<tr><td>A second browser or device shows no bots</td><td>FreqUI keeps its bot list and the tokens in that browser's local storage</td></tr>
+</tbody>
+</table></div>
+<h2>One origin by hand</h2>
+<p>Requests to the origin the page came from are not cross-origin, so no CORS rule applies to them. A reverse proxy can give FreqUI and every bot API the same scheme, host and port. FreqUI appends <code>/api/v1</code> to the address you enter for a bot, so a bot can sit under a path such as <code>/bots/meanrev</code> as long as the proxy strips that prefix before it passes the request on.</p>
+<p>With Traefik, one bot serves FreqUI at the root and every further bot gets a path:</p>
+<pre><code>services:
+  traefik:
+    image: traefik:v3.7.17
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:8000
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  trend:
+    image: freqtradeorg/freqtrade:stable
+    restart: unless-stopped
+    volumes:
+      - ./trend/user_data:/freqtrade/user_data
+    command: trade --config /freqtrade/user_data/config.json --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite --strategy Trend
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.trend.rule: "PathPrefix(`/`)"
+      traefik.http.routers.trend.entrypoints: web
+      traefik.http.routers.trend.priority: "1"
+      traefik.http.services.trend.loadbalancer.server.port: "8080"
+  meanrev:
+    image: freqtradeorg/freqtrade:stable
+    restart: unless-stopped
+    volumes:
+      - ./meanrev/user_data:/freqtrade/user_data
+    command: trade --config /freqtrade/user_data/config.json --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite --strategy MeanRev
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.meanrev.rule: "PathPrefix(`/bots/meanrev/`)"
+      traefik.http.routers.meanrev.entrypoints: web
+      traefik.http.routers.meanrev.priority: "50"
+      traefik.http.routers.meanrev.middlewares: meanrev-strip
+      traefik.http.middlewares.meanrev-strip.stripprefix.prefixes: /bots/meanrev
+      traefik.http.services.meanrev.loadbalancer.server.port: "8080"</code></pre>
+<p>No bot publishes a port. Each bot's <code>config.json</code> carries:</p>
+<pre><code>"api_server": {
+    "enabled": true,
+    "listen_ip_address": "0.0.0.0",
+    "listen_port": 8080,
+    "jwt_secret_key": "32 random characters or more, per bot",
+    "CORS_origins": [],
+    "username": "trend",
+    "password": "a strong password, per bot"
+}</code></pre>
+<p>Open <code>http://localhost:8000</code>, log in to the first bot at that address, then add the second with the API URL <code>http://localhost:8000/bots/meanrev</code>. <code>CORS_origins</code> stays empty on both.</p>
+<p>What stays manual: every bot keeps its own login, typed into each browser. The proxy itself has no login, so keep the port on <code>127.0.0.1</code> or behind a VPN. Each further bot is one more block of labels.</p>
+<h2>How Wickfleet sets it up</h2>
+<p>Wickfleet's <code>deploy/compose/compose.yml</code> is the same idea with a login in front. The bots are not in the compose file. The hub creates one container per bot file in the registry and writes the route labels itself.</p>
+<div class="table"><table>
+<thead><tr><th>Service</th><th>Job</th></tr></thead>
+<tbody>
+<tr><td><code>traefik</code></td><td>the only published port, <code>127.0.0.1:8000</code> by default. It reads container labels through a read-only Docker socket proxy</td></tr>
+<tr><td><code>ui</code></td><td>the FreqUI fork as static files, for every path outside <code>/api</code>, <code>/bots/</code> and <code>/hub/</code></td></tr>
+<tr><td><code>hub</code></td><td>the login and the API under <code>/hub/</code>. Traefik asks the hub before it passes a request to the UI or to a bot</td></tr>
+<tr><td><code>dockerguard</code></td><td>sits between the hub and a second socket proxy. It lets the hub create containers only from the listed Freqtrade image, with the listed bind paths, network and user</td></tr>
+<tr><td>Bot containers</td><td>one per bot, routed at <code>/bots/&lt;name&gt;/</code> with the prefix stripped, to port 8080, with no published port</td></tr>
+</tbody>
+</table></div>
+<p>The hub also writes the <code>api_server</code> block of every bot:</p>
+<div class="table"><table>
+<thead><tr><th>Setting</th><th>Value the hub writes</th></tr></thead>
+<tbody>
+<tr><td><code>enabled</code>, <code>listen_ip_address</code>, <code>listen_port</code></td><td><code>true</code>, <code>0.0.0.0</code>, <code>8080</code></td></tr>
+<tr><td><code>CORS_origins</code></td><td><code>[]</code>. Every bot is on the origin of the UI</td></tr>
+<tr><td><code>username</code></td><td>the bot's name</td></tr>
+<tr><td><code>password</code>, <code>jwt_secret_key</code></td><td>random, 32 bytes each, made per bot on first use and kept in the hub's state directory</td></tr>
+<tr><td><code>ws_token</code></td><td>not set</td></tr>
+</tbody>
+</table></div>
+<ul>
+  <li>You log in once at the hub. For a bot request without a token, the hub hands Traefik that bot's username and password, so the browser never holds a bot password. It does hold the session tokens the bot issues</li>
+  <li>Viewers and operators reach their own bots, a viewer only to read. Admins reach every bot. More in <a href="/docs/roles">roles and login</a></li>
+  <li>A new bot is one file in the registry, not a new compose service</li>
+</ul>
+<figure class="shot"><img src="/img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>Every bot of the registry on one address</figcaption></figure>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-multiple-bots">Multiple bots on one server<span>What each bot needs of its own, by hand and from a registry</span></a></li>
+  <li><a href="/freqtrade-dashboard">One dashboard for every bot<span>Fleet totals, compare and risk on top of FreqUI</span></a></li>
+  <li><a href="/freqtrade-lookahead-bias">Lookahead bias checks<span>What it is, how to find it, and the gate before a bot starts</span></a></li>
+  <li><a href="/freqtrade-strategy-without-python">A strategy without Python<span>Blocks, a plain-words readback and the generated code</span></a></li>
+  <li><a href="/freqtrade-backtest-vs-dry-run">Backtest against dry run<span>Why the two differ, and what a replay checks</span></a></li>
+  <li><a href="/self-hosted-trading-bot-dashboard">Dashboards compared<span>Open-source ways to watch several Freqtrade bots</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

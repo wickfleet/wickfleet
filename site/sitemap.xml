@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://wickfleet.com/</loc></url>
+  <url><loc>https://wickfleet.com/freqtrade-multiple-bots</loc></url>
+  <url><loc>https://wickfleet.com/freqtrade-dashboard</loc></url>
+  <url><loc>https://wickfleet.com/freqtrade-lookahead-bias</loc></url>
+  <url><loc>https://wickfleet.com/freqtrade-strategy-without-python</loc></url>
+  <url><loc>https://wickfleet.com/freqtrade-docker-compose</loc></url>
+  <url><loc>https://wickfleet.com/freqtrade-backtest-vs-dry-run</loc></url>
+  <url><loc>https://wickfleet.com/self-hosted-trading-bot-dashboard</loc></url>
   <url><loc>https://wickfleet.com/docs/</loc></url>
   <url><loc>https://wickfleet.com/docs/install</loc></url>
   <url><loc>https://wickfleet.com/docs/roles</loc></url>
   <url><loc>https://wickfleet.com/docs/compare</loc></url>
+  <url><loc>https://wickfleet.com/docs/freqai</loc></url>
   <url><loc>https://wickfleet.com/docs/risk</loc></url>
   <url><loc>https://wickfleet.com/docs/demo</loc></url>
   <url><loc>https://wickfleet.com/docs/faq</loc></url>

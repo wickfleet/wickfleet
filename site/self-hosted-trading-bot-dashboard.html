@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-hosted dashboards for Freqtrade bots compared - Wickfleet</title>
+<meta name="description" content="Open-source dashboards for several self-hosted Freqtrade bots: FreqUI, FTUI, FreqHub, FreqUI Ultimate, FT Dashboard and Wickfleet, as of November 2026.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/self-hosted-trading-bot-dashboard">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Self-hosted dashboards for Freqtrade bots compared - Wickfleet">
+<meta property="og:description" content="Open-source dashboards for several self-hosted Freqtrade bots: FreqUI, FTUI, FreqHub, FreqUI Ultimate, FT Dashboard and Wickfleet, as of November 2026.">
+<meta property="og:url" content="https://wickfleet.com/self-hosted-trading-bot-dashboard">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Self-hosted dashboards for Freqtrade bots compared - Wickfleet">
+<meta name="twitter:description" content="Open-source dashboards for several self-hosted Freqtrade bots: FreqUI, FTUI, FreqHub, FreqUI Ultimate, FT Dashboard and Wickfleet, as of November 2026.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Self-hosted dashboards for Freqtrade bots compared","item":"https://wickfleet.com/self-hosted-trading-bot-dashboard"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>Self-hosted dashboards for Freqtrade bots compared</h1>
+<p class="lede">Freqtrade ships with FreqUI, and several open-source projects add a view over more than one bot. This page lists the ones we could verify from their own repositories on 2026-11-17: what each is, its license, its last release, and what it does and does not do by its own description. Wickfleet is one of them and this page is written by its author, so follow the links and check.</p>
+<h2>The projects</h2>
+<div class="table"><table>
+<thead><tr><th>Project</th><th>What it is</th><th>License</th><th>Latest release</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/freqtrade/frequi">FreqUI</a></td><td>the web UI of Freqtrade, built into the bot and served by it</td><td>GPL-3.0</td><td>3.3.0, 2026-11-08</td></tr>
+<tr><td><a href="https://github.com/freqtrade/ftui">FTUI</a></td><td>a terminal UI in Python, in the Freqtrade organisation on GitHub</td><td>MIT</td><td>0.1.13, 2026-02-09</td></tr>
+<tr><td><a href="https://github.com/hrodrig/freqhub">FreqHub</a></td><td>a backend server with a React dashboard</td><td>GPL-3.0</td><td>v0.2.24, 2026-10-10</td></tr>
+<tr><td><a href="https://github.com/titouannwtt/frequi-ultimate">FreqUI Ultimate</a></td><td>a fork of FreqUI, installed into the bot in place of FreqUI</td><td>GPL-3.0</td><td>v2.2.1, 2026-11-15</td></tr>
+<tr><td><a href="https://github.com/stash86/ft-dashboard">FT Dashboard</a></td><td>PHP pages over a PostgreSQL database that a cron job fills</td><td>GPL-3.0</td><td>no releases. Last commit 2026-09-23</td></tr>
+<tr><td><a href="https://github.com/wickfleet/wickfleet">Wickfleet</a></td><td>a hub server in Go with a fork of FreqUI</td><td>GPL-3.0</td><td>v0.2.0, 2026-11-12</td></tr>
+</tbody>
+</table></div>
+<h2>How each handles several bots</h2>
+<div class="table"><table>
+<thead><tr><th>Project</th><th>Bot list and logins</th><th>What it shows or does</th><th>Limits it names itself</th></tr></thead>
+<tbody>
+<tr><td>FreqUI</td><td>you add each bot by URL and login. The list and the session tokens live in the browser</td><td>trade view with start, stop and forced trades, a dashboard over all connected bots with a bot comparison table, plot configuration, backtesting in webserver mode</td><td>no server of its own, by design. Bots on other addresses need <code>CORS_origins</code></td></tr>
+<tr><td>FTUI</td><td>a <code>config.yaml</code> with address, username and password per bot, on the machine that runs FTUI</td><td>a dashboard with summary statistics from all bots, and per bot open and closed trades, tag summary, performance, logs and system info. It uses the REST client, so no CORS setup</td><td>does not control a running bot. Linux only. Its README calls it alpha</td></tr>
+<tr><td>FreqHub</td><td>bots are connected by their API address. The backend keeps the credentials encrypted in SQLite and proxies the bot APIs</td><td>an aggregate dashboard and per-bot views, login with roles and an audit log, trade management, bot comparison, backtest comparison and alerts. Images for Docker and examples for Kubernetes</td><td>its README calls it alpha and not hardened for every deployment. Two-factor login is on its roadmap</td></tr>
+<tr><td>FreqUI Ultimate</td><td>bots are added through the FreqUI login. The browser polls every bot and merges the results</td><td>a fleet dashboard with bot comparison and alerts across bots, in 6 languages</td><td>several panels, among them risk overview, strategy editor and config editor, need the author's Freqtrade fork and stay empty on stock Freqtrade</td></tr>
+<tr><td>FT Dashboard</td><td>a <code>bots.json</code> on the server with address, username and password per bot</td><td>a profit chart and the latest closed trades per bot, fetched every 10 minutes by default. An optional API returns profit, open trades and closed trades</td><td>read-only by its own description</td></tr>
+<tr><td>Wickfleet</td><td>bots are files in a git registry. The hub creates their containers and keeps the bot logins on the server. The browser holds a session token per bot</td><td>one login with viewer, operator and admin roles, totals per stake currency with dry and live apart, <a href="/docs/compare">Compare</a> and <a href="/docs/risk">Risk</a> across bots, replays with bias checks and a robustness verdict, the FreqUI trade view per bot</td><td>it shows the bots of its own registry, which it runs as containers through one Docker API. Public on GitHub since November 2026</td></tr>
+</tbody>
+</table></div>
+<h2>How this list was made</h2>
+<ul>
+  <li>A project is listed when its repository carries an open-source license, had a commit in the last 12 months, and shows more than one Freqtrade bot</li>
+  <li>Every cell comes from the project's README, its release list or its code. Nothing here was measured or rated by us</li>
+  <li>No prices and no hosted services are listed</li>
+  <li>Projects change. The dates are from 2026-11-17</li>
+</ul>
+<h2>Which one fits what</h2>
+<div class="table"><table>
+<thead><tr><th>Situation</th><th>Fits</th></tr></thead>
+<tbody>
+<tr><td>One or two bots and one browser</td><td>FreqUI. It is already installed</td></tr>
+<tr><td>A look at the bots from a terminal, without control</td><td>FTUI</td></tr>
+<tr><td>Bots that already run somewhere, with the bot list and logins moved to a server</td><td>FreqHub</td></tr>
+<tr><td>The FreqUI workflow with more fleet panels in the browser</td><td>FreqUI Ultimate</td></tr>
+<tr><td>A read-only page that keeps its own history in a database</td><td>FT Dashboard</td></tr>
+<tr><td>Bots defined in git and started by the dashboard, with a replay before a bot starts</td><td>Wickfleet</td></tr>
+</tbody>
+</table></div>
+<h2>Wickfleet in short</h2>
+<p>Wickfleet keeps FreqUI for everything about one bot and adds a server next to it. The hub reads a git registry, starts and stops the bot containers to match, and puts every bot behind one address with one login.</p>
+<figure class="shot"><img src="/img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>The fleet page: one row per bot, totals per stake currency</figcaption></figure>
+<p>The cost is one more service to run. The longer comparison with FreqUI is in the <a href="/docs/faq">FAQ</a>.</p>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-multiple-bots">Multiple bots on one server<span>What each bot needs of its own, by hand and from a registry</span></a></li>
+  <li><a href="/freqtrade-dashboard">One dashboard for every bot<span>Fleet totals, compare and risk on top of FreqUI</span></a></li>
+  <li><a href="/freqtrade-lookahead-bias">Lookahead bias checks<span>What it is, how to find it, and the gate before a bot starts</span></a></li>
+  <li><a href="/freqtrade-strategy-without-python">A strategy without Python<span>Blocks, a plain-words readback and the generated code</span></a></li>
+  <li><a href="/freqtrade-docker-compose">Docker Compose, one address<span>Many bots behind one origin, and where the CORS error comes from</span></a></li>
+  <li><a href="/freqtrade-backtest-vs-dry-run">Backtest against dry run<span>Why the two differ, and what a replay checks</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

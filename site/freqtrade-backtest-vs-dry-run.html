@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Freqtrade backtest vs dry run: why results differ - Wickfleet</title>
+<meta name="description" content="Why a Freqtrade dry run rarely matches its backtest: fills, callback timing, lookahead bias and pairlists, and what Wickfleet's replay verdict checks.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/freqtrade-backtest-vs-dry-run">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Freqtrade backtest vs dry run: why results differ - Wickfleet">
+<meta property="og:description" content="Why a Freqtrade dry run rarely matches its backtest: fills, callback timing, lookahead bias and pairlists, and what Wickfleet's replay verdict checks.">
+<meta property="og:url" content="https://wickfleet.com/freqtrade-backtest-vs-dry-run">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Freqtrade backtest vs dry run: why results differ - Wickfleet">
+<meta name="twitter:description" content="Why a Freqtrade dry run rarely matches its backtest: fills, callback timing, lookahead bias and pairlists, and what Wickfleet's replay verdict checks.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Freqtrade backtest vs dry run: why results differ","item":"https://wickfleet.com/freqtrade-backtest-vs-dry-run"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>Freqtrade backtest vs dry run: why results differ</h1>
+<p class="lede">A backtest replays stored candles. A dry run trades the live market with simulated orders. The two rarely agree, and Freqtrade's docs say it plainly: backtesting will never replace running a strategy in dry-run mode. This page lists the documented reasons, then shows what Wickfleet checks before a bot starts.</p>
+<h2>What each mode does</h2>
+<div class="table"><table>
+<thead><tr><th>Part</th><th>Backtest</th><th>Dry run</th></tr></thead>
+<tbody>
+<tr><td>Data</td><td>stored candles for the chosen time range</td><td>live candles from the exchange</td></tr>
+<tr><td>Strategy</td><td>indicators and signals are calculated once per pair, over the whole range</td><td>analysed inside the bot loop, which runs every few seconds</td></tr>
+<tr><td>Entry price</td><td>the candle's open, unless the strategy sets a custom price</td><td>from <code>entry_pricing</code> or <code>custom_entry_price()</code></td></tr>
+<tr><td>Fills</td><td>every order fills at the requested price while that price is inside the candle's high and low. No slippage</td><td>a limit order fills once the price reaches its level, or times out by <code>unfilledtimeout</code>. A market order fills against order book volume, with at most 5% slippage</td></tr>
+<tr><td>Callbacks</td><td>at most once per candle</td><td>most of them once per loop, usually about every 5 seconds</td></tr>
+<tr><td>Wallet</td><td>a starting balance from <code>dry_run_wallet</code></td><td>a simulated wallet from <code>dry_run_wallet</code></td></tr>
+<tr><td>Fees</td><td colspan="2">the exchange's default fee, or <code>fee</code> from the config</td></tr>
+</tbody>
+</table></div>
+<h2>Documented reasons the results differ</h2>
+<div class="table"><table>
+<thead><tr><th>Reason</th><th>What happens</th><th>What Freqtrade offers</th></tr></thead>
+<tbody>
+<tr><td>Lookahead bias</td><td>the strategy reads data a running bot does not have yet: <code>shift(-1)</code>, a statistic over the whole column, <code>.iloc[-1]</code> in the populate functions, a higher timeframe joined with a plain <code>.merge()</code>. The backtest looks excellent and the bot does not repeat it</td><td><code>freqtrade lookahead-analysis</code></td></tr>
+<tr><td>Too little startup history</td><td>some indicators are wrong until they have seen enough candles, and Freqtrade uses whatever value is in the dataframe</td><td><code>startup_candle_count</code>, checked with <code>freqtrade recursive-analysis</code></td></tr>
+<tr><td>Inside a candle</td><td>a backtest sees only open, high, low and close. It evaluates stoploss before ROI within a candle and assumes the low came before the high for a stoploss, so backtests often show more stoploss exits than a dry run</td><td><code>--timeframe-detail 5m</code> simulates the candle from a faster timeframe</td></tr>
+<tr><td>Callback timing</td><td>callbacks such as <code>custom_exit()</code> and <code>custom_stoploss()</code> run at most once per candle in a backtest. In a running bot most of them run every few seconds</td><td><code>--timeframe-detail</code> runs them once per detail candle</td></tr>
+<tr><td>Orders that do not fill</td><td>a dry-run limit order can time out. In a backtest it fills whenever its price is inside the candle</td><td><code>unfilledtimeout</code> and the pricing settings decide what a running bot does</td></tr>
+<tr><td>Dynamic pairlists</td><td>they depend on the market of today, not on the market of the backtest range, and results are not guaranteed to be reproducible</td><td>a static pairlist, for example from <code>freqtrade test-pairlist</code></td></tr>
+<tr><td>Exchange limits</td><td>minimum amounts and price precision in a backtest are today's values. Freqtrade has no historic limits</td><td>nothing to set. Know it when a backtest reaches far back</td></tr>
+</tbody>
+</table></div>
+<p>The docs suggest a backtest with <code>--timeframe-detail</code> as the last part of strategy development, to make sure the strategy does not lean on one of the candle assumptions. They add that only forward testing in dry-run mode can confirm a strategy.</p>
+<h2>A dry run is a simulation too</h2>
+<ul>
+  <li>Orders are simulated and never reach the exchange. Only read-only calls are made</li>
+  <li>The balance is simulated from <code>dry_run_wallet</code></li>
+  <li>A limit order that crosses the price by more than 1% is treated as a market order</li>
+  <li>With <code>stoploss_on_exchange</code> the stop price is assumed to be filled</li>
+  <li>Open orders stay open across a restart, on the assumption that they did not fill while the bot was off</li>
+</ul>
+<p>The docs recommend a fresh database when a bot moves from dry run to real money.</p>
+<h2>What Wickfleet does with this</h2>
+<p>In Wickfleet a replay is a Freqtrade backtest of one bot over a date range you choose. It runs on the config the hub writes for that bot, so pairs, stake currency, wallet, open trade limit and fee match the bot, and it is always paper money. A replay runs without <code>--timeframe-detail</code>, so the candle assumptions above apply to it as well.</p>
+<p>After the backtest, three more results come out of the same run.</p>
+<div class="table"><table>
+<thead><tr><th>Step</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Lookahead analysis, with a minimum of 5 trades</td><td>clean, biased or inconclusive. Biased blocks a new bot with those settings</td></tr>
+<tr><td>Recursive analysis</td><td>a warning when an indicator drifts more than 0.1% at the strategy's own startup count</td></tr>
+<tr><td>Robustness verdict</td><td>pass or fail with reasons, from the trades of the replay</td></tr>
+</tbody>
+</table></div>
+<p>Both analyses are skipped for a FreqAI bot.</p>
+<figure class="shot"><img src="/img/replay.png" alt="Replay summary with bias checks and robustness verdict, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>A replay with its bias checks and robustness verdict</figcaption></figure>
+<h2>The robustness verdict</h2>
+<p>A backtest can be free of bias and still rest on one good month or a handful of trades. The verdict looks at that, with these default rules:</p>
+<div class="table"><table>
+<thead><tr><th>Check</th><th>Pass rule</th></tr></thead>
+<tbody>
+<tr><td>Walk-forward windows</td><td>the range is cut into 30-day windows, counted back from its end. At least 6 full windows</td></tr>
+<tr><td>Total</td><td>profit after fees over the replay is above 0</td></tr>
+<tr><td>Consistency</td><td>at least half of the windows are profitable</td></tr>
+<tr><td>Worst window</td><td>no window loses more than 15%</td></tr>
+<tr><td>Monte Carlo</td><td>the trades are drawn again at random 10,000 times. At most 5% of the runs reach a 50% drawdown. With fewer than 20 trades the numbers are shown, not judged</td></tr>
+</tbody>
+</table></div>
+<p>The replay also shows its profit against buying and holding over the same range. That number is shown, not judged.</p>
+<h2>What gates a bot</h2>
+<div class="table"><table>
+<thead><tr><th>Saving through the hub</th><th>Needs</th></tr></thead>
+<tbody>
+<tr><td>A new bot</td><td>your own replay of exactly these settings, finished in the last 7 days, in which no lookahead bias was found. An inconclusive or skipped check and a recursive warning do not block</td></tr>
+<tr><td>A bot with real money</td><td>the same, and the robustness verdict passed. The instance must also allow live trading and hold that bot's exchange key file</td></tr>
+</tbody>
+</table></div>
+<p>The gate runs when a bot is saved through the hub. A bot file committed straight to the registry does not pass through it.</p>
+<p>Every bot is a dry run by default, and the fleet page sums dry and live bots apart. To put several strategies through the same range, <a href="/docs/compare">Compare</a> replays two or more bots over one window.</p>
+<p>A passed verdict describes the replayed range. It is not a forecast, and it does not replace the dry run.</p>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-multiple-bots">Multiple bots on one server<span>What each bot needs of its own, by hand and from a registry</span></a></li>
+  <li><a href="/freqtrade-dashboard">One dashboard for every bot<span>Fleet totals, compare and risk on top of FreqUI</span></a></li>
+  <li><a href="/freqtrade-lookahead-bias">Lookahead bias checks<span>What it is, how to find it, and the gate before a bot starts</span></a></li>
+  <li><a href="/freqtrade-strategy-without-python">A strategy without Python<span>Blocks, a plain-words readback and the generated code</span></a></li>
+  <li><a href="/freqtrade-docker-compose">Docker Compose, one address<span>Many bots behind one origin, and where the CORS error comes from</span></a></li>
+  <li><a href="/self-hosted-trading-bot-dashboard">Dashboards compared<span>Open-source ways to watch several Freqtrade bots</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>
