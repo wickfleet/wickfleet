@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run multiple Freqtrade bots on one server - Wickfleet</title>
+<meta name="description" content="How to run several Freqtrade bots side by side: one container, config, database and API port per bot, and how Wickfleet runs them from one registry.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/freqtrade-multiple-bots">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Run multiple Freqtrade bots on one server - Wickfleet">
+<meta property="og:description" content="How to run several Freqtrade bots side by side: one container, config, database and API port per bot, and how Wickfleet runs them from one registry.">
+<meta property="og:url" content="https://wickfleet.com/freqtrade-multiple-bots">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Run multiple Freqtrade bots on one server - Wickfleet">
+<meta name="twitter:description" content="How to run several Freqtrade bots side by side: one container, config, database and API port per bot, and how Wickfleet runs them from one registry.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Run multiple Freqtrade bots on one server","item":"https://wickfleet.com/freqtrade-multiple-bots"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>Run multiple Freqtrade bots on one server</h1>
+<p class="lede">A Freqtrade bot runs one strategy. To trade several strategies, pair lists or exchanges at once, you run several bots next to each other. This page covers what each bot needs of its own, how that looks by hand, and how Wickfleet takes the bookkeeping over.</p>
+<h2>What every bot needs of its own</h2>
+<div class="table"><table>
+<thead><tr><th>Part</th><th>Why it cannot be shared</th></tr></thead>
+<tbody>
+<tr><td>Process</td><td>one <code>freqtrade trade</code> process or container per bot</td></tr>
+<tr><td>Config</td><td>strategy, pairs, stake and <code>bot_name</code> differ per bot</td></tr>
+<tr><td>Trade database</td><td>set with <code>--db-url</code>. Two bots must never write to the same database</td></tr>
+<tr><td>API port and login</td><td>each bot serves its own REST API, so each needs its own port and has its own login</td></tr>
+<tr><td>Exchange account</td><td>Freqtrade assumes it owns the account. Use one subaccount per bot where the exchange has them. On a shared account give each bot its own <code>available_capital</code>, and do not use <code>tradable_balance_ratio</code></td></tr>
+</tbody>
+</table></div>
+<h2>By hand with Docker Compose</h2>
+<p>One service per bot, each with its own <code>user_data</code> folder, database and host port:</p>
+<pre><code>services:
+  trend:
+    image: freqtradeorg/freqtrade:stable
+    restart: unless-stopped
+    volumes:
+      - ./trend/user_data:/freqtrade/user_data
+    ports:
+      - "127.0.0.1:8081:8080"
+    command: trade --config /freqtrade/user_data/config.json --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite --strategy Trend
+  meanrev:
+    image: freqtradeorg/freqtrade:stable
+    restart: unless-stopped
+    volumes:
+      - ./meanrev/user_data:/freqtrade/user_data
+    ports:
+      - "127.0.0.1:8082:8080"
+    command: trade --config /freqtrade/user_data/config.json --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite --strategy MeanRev</code></pre>
+<p>Each <code>config.json</code> needs the <code>api_server</code> section with <code>enabled: true</code> and <code>listen_ip_address: "0.0.0.0"</code>, or the published port reaches nothing. The strategy file goes in that bot's <code>user_data/strategies</code>.</p>
+<p>That is fine for two bots. Every further bot adds a service, a port, a password and one more login in FreqUI, where the bot list lives in the browser you typed it into.</p>
+<h2>From a registry with Wickfleet</h2>
+<p>In Wickfleet a bot is one small file in a git repository. The hub reads that registry every 30 seconds and creates, replaces or removes the bot containers to match.</p>
+<pre><code>name: trend
+owner: alice
+strategy: EmaCross
+strategy_file: EmaCross.py
+exchange: binance
+pairs: [BTC/USDT, ETH/USDT]
+stake_currency: USDT
+wallet: 1000
+max_open_trades: 3
+dry_run: true</code></pre>
+<div class="table"><table>
+<thead><tr><th>Part</th><th>By hand</th><th>Wickfleet</th></tr></thead>
+<tbody>
+<tr><td>New bot</td><td>new compose service, config, port, password</td><td>one file, saved in the UI or committed to the registry</td></tr>
+<tr><td>Ports</td><td>one published port per bot</td><td>none. Every bot sits behind one origin at <code>/bots/&lt;name&gt;/</code></td></tr>
+<tr><td>API passwords</td><td>one per bot, typed into each browser</td><td>made by the hub per bot and added per request. The browser never holds the password, only a session token the bot issues</td></tr>
+<tr><td>History</td><td>whatever you keep yourself</td><td>every bot and strategy change is a git commit</td></tr>
+<tr><td>Container</td><td>your compose defaults</td><td>all capabilities dropped, fixed binds, only images you listed</td></tr>
+<tr><td>Real money</td><td>whatever the config says</td><td>dry run unless the instance and the bot both switch it on and the host holds the bot's exchange key file. A save through the hub also needs a recent replay that passed</td></tr>
+</tbody>
+</table></div>
+<figure class="shot"><img src="/img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>The fleet page: one row per bot, totals per stake currency</figcaption></figure>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-dashboard">One dashboard for every bot<span>Fleet totals, compare and risk on top of FreqUI</span></a></li>
+  <li><a href="/freqtrade-lookahead-bias">Lookahead bias checks<span>What it is, how to find it, and the gate before a bot starts</span></a></li>
+  <li><a href="/freqtrade-strategy-without-python">A strategy without Python<span>Blocks, a plain-words readback and the generated code</span></a></li>
+  <li><a href="/freqtrade-docker-compose">Docker Compose, one address<span>Many bots behind one origin, and where the CORS error comes from</span></a></li>
+  <li><a href="/freqtrade-backtest-vs-dry-run">Backtest against dry run<span>Why the two differ, and what a replay checks</span></a></li>
+  <li><a href="/self-hosted-trading-bot-dashboard">Dashboards compared<span>Open-source ways to watch several Freqtrade bots</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

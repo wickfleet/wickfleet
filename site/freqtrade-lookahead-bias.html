@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check a Freqtrade strategy for lookahead bias - Wickfleet</title>
+<meta name="description" content="What lookahead bias is, how to find it with freqtrade lookahead-analysis and recursive-analysis, and how Wickfleet runs both before a bot starts.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/freqtrade-lookahead-bias">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Check a Freqtrade strategy for lookahead bias - Wickfleet">
+<meta property="og:description" content="What lookahead bias is, how to find it with freqtrade lookahead-analysis and recursive-analysis, and how Wickfleet runs both before a bot starts.">
+<meta property="og:url" content="https://wickfleet.com/freqtrade-lookahead-bias">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Check a Freqtrade strategy for lookahead bias - Wickfleet">
+<meta name="twitter:description" content="What lookahead bias is, how to find it with freqtrade lookahead-analysis and recursive-analysis, and how Wickfleet runs both before a bot starts.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Check a Freqtrade strategy for lookahead bias","item":"https://wickfleet.com/freqtrade-lookahead-bias"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>Check a Freqtrade strategy for lookahead bias</h1>
+<p class="lede">A backtest with lookahead bias uses candles the bot could not have seen at the time. The result looks excellent, and the running bot never repeats it. This page covers where the bias comes from, how to find it with Freqtrade's own tools, and how Wickfleet runs those checks before a bot starts.</p>
+<h2>Where it comes from</h2>
+<ul>
+  <li>A negative shift such as <code>shift(-1)</code>, which reads the next candle</li>
+  <li>A statistic over the whole column, such as <code>dataframe["close"].mean()</code>. In a backtest the column holds the future too</li>
+  <li><code>.iloc[-1]</code> inside the populate functions, which is the last candle of the whole backtest, not the current one</li>
+  <li>A higher timeframe merged by hand with <code>.merge()</code>. Candle dates are open times, so a plain merge hands the 1h candle to the 5m rows before it has closed. <code>merge_informative_pair</code> aligns on the close</li>
+</ul>
+<h2>Freqtrade's own checks</h2>
+<pre><code>freqtrade lookahead-analysis --strategy MyStrategy --timerange 20250101-20260101
+freqtrade recursive-analysis --strategy MyStrategy --timerange 20250101-20260101</code></pre>
+<div class="table"><table>
+<thead><tr><th>Command</th><th>Finds</th></tr></thead>
+<tbody>
+<tr><td><code>lookahead-analysis</code></td><td>signals that change when the data after them is cut away. It needs trades to check, 10 by default (<code>--minimum-trade-amount</code>), so a strategy that barely trades cannot be judged</td></tr>
+<tr><td><code>recursive-analysis</code></td><td>indicator values that depend on how much history was loaded, which makes a backtest and a running bot disagree. It checks one pair, the first in the whitelist unless <code>-p</code> names another, and Freqtrade recommends a range of at least 5000 candles</td></tr>
+</tbody>
+</table></div>
+<h2>What Wickfleet does with them</h2>
+<p>A replay in Wickfleet is a backtest of one bot on its real config, so fees and stake match the bot. After the backtest, two more steps run on the same data.</p>
+<div class="table"><table>
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Lookahead analysis, run with a minimum of 5 trades</td><td>a bias blocks a new bot with those settings</td></tr>
+<tr><td>Too few trades to judge</td><td>shown as a warning</td></tr>
+<tr><td>Recursive analysis, drift above 0.1% at the strategy's own startup</td><td>shown as a warning</td></tr>
+</tbody>
+</table></div>
+<figure class="shot"><img src="/img/replay.png" alt="Replay summary with bias checks and robustness verdict, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>A replay with its bias checks and robustness verdict</figcaption></figure>
+<h2>Beyond bias: the robustness verdict</h2>
+<p>A backtest without bias can still be luck. Every replay also gets a verdict from its own trades, with no extra run.</p>
+<div class="table"><table>
+<thead><tr><th>Check</th><th>Pass rule (defaults)</th></tr></thead>
+<tbody>
+<tr><td>Walk-forward windows</td><td>the range splits into 30-day windows. At least 6</td></tr>
+<tr><td>Total</td><td>net profit over the replay above 0</td></tr>
+<tr><td>Consistency</td><td>at least half the windows profitable</td></tr>
+<tr><td>Worst window</td><td>no window below -15%</td></tr>
+<tr><td>Monte Carlo</td><td>10,000 resamples of the trades. At most 5% reach a 50% drawdown. Under 20 trades it is shown, not judged</td></tr>
+</tbody>
+</table></div>
+<p>A failed verdict warns on a dry-run bot. It is the gate for live trading: saving a bot with real money through the hub needs your own replay of exactly its settings from the last 7 days, with no lookahead bias found and this verdict passed.</p>
+<p>A clean check does not make a strategy good. It says the backtest did not cheat, nothing more.</p>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-multiple-bots">Multiple bots on one server<span>What each bot needs of its own, by hand and from a registry</span></a></li>
+  <li><a href="/freqtrade-dashboard">One dashboard for every bot<span>Fleet totals, compare and risk on top of FreqUI</span></a></li>
+  <li><a href="/freqtrade-strategy-without-python">A strategy without Python<span>Blocks, a plain-words readback and the generated code</span></a></li>
+  <li><a href="/freqtrade-docker-compose">Docker Compose, one address<span>Many bots behind one origin, and where the CORS error comes from</span></a></li>
+  <li><a href="/freqtrade-backtest-vs-dry-run">Backtest against dry run<span>Why the two differ, and what a replay checks</span></a></li>
+  <li><a href="/self-hosted-trading-bot-dashboard">Dashboards compared<span>Open-source ways to watch several Freqtrade bots</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

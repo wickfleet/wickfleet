@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A dashboard for all your Freqtrade bots - Wickfleet</title>
+<meta name="description" content="One web dashboard for several Freqtrade bots: totals per stake currency with dry and live apart, compare and risk views, on top of FreqUI.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/freqtrade-dashboard">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="A dashboard for all your Freqtrade bots - Wickfleet">
+<meta property="og:description" content="One web dashboard for several Freqtrade bots: totals per stake currency with dry and live apart, compare and risk views, on top of FreqUI.">
+<meta property="og:url" content="https://wickfleet.com/freqtrade-dashboard">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="A dashboard for all your Freqtrade bots - Wickfleet">
+<meta name="twitter:description" content="One web dashboard for several Freqtrade bots: totals per stake currency with dry and live apart, compare and risk views, on top of FreqUI.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"A dashboard for all your Freqtrade bots","item":"https://wickfleet.com/freqtrade-dashboard"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>A dashboard for all your Freqtrade bots</h1>
+<p class="lede">FreqUI is the dashboard Freqtrade ships with, and it is good at one bot. This page covers how far it goes with several bots, and what Wickfleet adds for someone who runs three or more.</p>
+<h2>What FreqUI does with several bots</h2>
+<ul>
+  <li>You add each bot by its URL and login in the browser, and switch between them</li>
+  <li>Its dashboard has a bot comparison table: one row per bot and a summary row</li>
+  <li>When FreqUI and a bot are served from different addresses, that bot needs FreqUI's address in <code>api_server.CORS_origins</code>, or the browser blocks the calls</li>
+</ul>
+<p>With one or two bots that is often all you need.</p>
+<h2>Where it stops</h2>
+<p>FreqUI has no server of its own, on purpose. Its maintainer has explained why in the issue tracker (<a href="https://github.com/freqtrade/frequi/issues/1094">#1094</a>). For a fleet that leaves three gaps:</p>
+<ul>
+  <li>The bot list and every bot login live in one browser. A second device starts empty</li>
+  <li>The summary row adds up profit, and balance when the selected bots share one stake currency, and marks a sum that mixes dry and live. There is no total per stake currency, and no view that keeps dry and live apart</li>
+  <li>A bot has one login. Showing the bots to someone means sharing it</li>
+</ul>
+<h2>What the Wickfleet dashboard shows</h2>
+<div class="table"><table>
+<thead><tr><th>View</th><th>Shows</th></tr></thead>
+<tbody>
+<tr><td>Fleet</td><td>per bot: invested, value, profit after fees, fees, return, trades and fee per trade. Totals per stake currency: invested, value, profit after fees, fees and return. Dry and live are never summed together</td></tr>
+<tr><td><a href="/docs/compare">Compare</a></td><td>several bots replayed over the same window: profit, drawdown, ratios and a robustness verdict per bot</td></tr>
+<tr><td><a href="/docs/risk">Risk</a></td><td>open trades, capital at stake, exposure per pair and per coin, drawdown, stoploss distance and pair overlap across bots</td></tr>
+<tr><td>Each bot</td><td>the FreqUI trade view, unchanged</td></tr>
+<tr><td>Metrics</td><td>per bot as Prometheus gauges at the hub's <code>/metrics</code>: up, investment, value, net profit, fees, trades and fee per trade, for your own Grafana</td></tr>
+</tbody>
+</table></div>
+<figure class="shot"><img src="/img/fleet.png" alt="Fleet overview: totals per stake currency and one row per bot, amounts blurred" width="1440" height="900" loading="lazy"><figcaption>Fleet overview, amounts blurred</figcaption></figure>
+<h2>One login, one address</h2>
+<ul>
+  <li>The bot list lives on the server, so every browser and device sees the same fleet</li>
+  <li>People log in once and get a role: viewer, operator or admin. On Compare and Risk a viewer sees percentages and verdicts, no balances. More in <a href="/docs/roles">roles and login</a></li>
+  <li>Bot API keys stay on the server. The hub adds each bot's key per request</li>
+  <li>Every bot is served under the same address at <code>/bots/&lt;name&gt;/</code>, so there is no <code>CORS_origins</code> to maintain</li>
+</ul>
+<p>The cost is one more service to run. Without a need for any of this, plain FreqUI is simpler. The longer comparison is in the <a href="/docs/faq">FAQ</a>.</p>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-multiple-bots">Multiple bots on one server<span>What each bot needs of its own, by hand and from a registry</span></a></li>
+  <li><a href="/freqtrade-lookahead-bias">Lookahead bias checks<span>What it is, how to find it, and the gate before a bot starts</span></a></li>
+  <li><a href="/freqtrade-strategy-without-python">A strategy without Python<span>Blocks, a plain-words readback and the generated code</span></a></li>
+  <li><a href="/freqtrade-docker-compose">Docker Compose, one address<span>Many bots behind one origin, and where the CORS error comes from</span></a></li>
+  <li><a href="/freqtrade-backtest-vs-dry-run">Backtest against dry run<span>Why the two differ, and what a replay checks</span></a></li>
+  <li><a href="/self-hosted-trading-bot-dashboard">Dashboards compared<span>Open-source ways to watch several Freqtrade bots</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

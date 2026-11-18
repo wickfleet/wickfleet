@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build a Freqtrade strategy without Python - Wickfleet</title>
+<meta name="description" content="Build a Freqtrade strategy from blocks: indicators and conditions from a whitelist, read back in plain words, turned into the Python that Freqtrade runs.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/freqtrade-strategy-without-python">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="Build a Freqtrade strategy without Python - Wickfleet">
+<meta property="og:description" content="Build a Freqtrade strategy from blocks: indicators and conditions from a whitelist, read back in plain words, turned into the Python that Freqtrade runs.">
+<meta property="og:url" content="https://wickfleet.com/freqtrade-strategy-without-python">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Build a Freqtrade strategy without Python - Wickfleet">
+<meta name="twitter:description" content="Build a Freqtrade strategy from blocks: indicators and conditions from a whitelist, read back in plain words, turned into the Python that Freqtrade runs.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Build a Freqtrade strategy without Python","item":"https://wickfleet.com/freqtrade-strategy-without-python"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+<h1>Build a Freqtrade strategy without Python</h1>
+<p class="lede">Freqtrade strategies are Python classes. Wickfleet lets you describe one as a small spec instead, built from blocks in the browser. The hub checks it, reads it back in plain words and generates the Python that Freqtrade runs.</p>
+<figure class="shot"><img src="/img/strategy.png" alt="Strategy editor with Blockly blocks and a plain-words readback" width="1440" height="900" loading="lazy"><figcaption>Strategy from blocks, read back in plain words</figcaption></figure>
+<h2>What a spec can say</h2>
+<div class="table"><table>
+<thead><tr><th>Part</th><th>Choices</th></tr></thead>
+<tbody>
+<tr><td>Market</td><td>spot, long only, one timeframe</td></tr>
+<tr><td>Indicators</td><td>sma, ema, tema, highest, lowest, rsi, atr, adx, bollinger, macd, stoch</td></tr>
+<tr><td>Conditions</td><td><code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code> <code>==</code> <code>crosses_above</code> <code>crosses_below</code> <code>rising</code> <code>falling</code></td></tr>
+<tr><td>Combining</td><td>one level of <code>all</code> or <code>any</code>, for entry and for exit</td></tr>
+<tr><td>Exits</td><td>stoploss, time-based ROI and trailing stop</td></tr>
+</tbody>
+</table></div>
+<h2>An example</h2>
+<p>The demo bot of the quick start runs this spec:</p>
+<pre><code>{
+  "version": 1,
+  "name": "EmaCross",
+  "description": "Demo: long when EMA 12 crosses above EMA 26 while price is above SMA 200, out when EMA 12 crosses back below.",
+  "timeframe": "1d",
+  "stoploss": -0.15,
+  "indicators": [
+    {
+      "id": "ema12",
+      "kind": "ema",
+      "source": "close",
+      "period": 12
+    },
+    {
+      "id": "ema26",
+      "kind": "ema",
+      "source": "close",
+      "period": 26
+    },
+    {
+      "id": "sma200",
+      "kind": "sma",
+      "source": "close",
+      "period": 200
+    }
+  ],
+  "entry": {
+    "all": [
+      {
+        "left": "ema12",
+        "op": "crosses_above",
+        "right": "ema26"
+      },
+      {
+        "left": "close",
+        "op": "&gt;",
+        "right": "sma200"
+      }
+    ]
+  },
+  "exit": {
+    "any": [
+      {
+        "left": "ema12",
+        "op": "crosses_below",
+        "right": "ema26"
+      }
+    ]
+  }
+}</code></pre>
+<p>The readback the hub gives for it:</p>
+<ul>
+  <li>EmaCross trades 1d candles, long only</li>
+  <li>Buy when the 12-candle exponential average of the close crosses above the 26-candle exponential average of the close and the close is above the 200-candle average of the close</li>
+  <li>Sell when the 12-candle exponential average of the close crosses below the 26-candle exponential average of the close, or when the loss reaches 15%</li>
+  <li>It needs 200 candles of history before the first signal</li>
+</ul>
+<h2>Why a spec and not a text box</h2>
+<ul>
+  <li>No typed text becomes code. Every name is checked against a strict pattern, the generator formats every number, and the description lands only in a comment, limited to plain characters on one line</li>
+  <li><code>make equivalence</code> backtests the demo specs against hand-written twins and fails unless both make the same trades</li>
+  <li>A spec is a file in the git registry, so every change is a commit with an author</li>
+  <li>A hand-written <code>.py</code> strategy in the registry still runs as is. Review it like any code you run</li>
+</ul>
+<h2>From a sentence, if you want</h2>
+<p>Drafting a spec from a sentence is optional and needs an Ollama endpoint or an Anthropic API key you configure. The model only proposes the JSON. The hub validates it against the same whitelist and never saves a draft by itself.</p>
+<h2>What it cannot do</h2>
+<p>No shorts, no futures, no second timeframe and no indicator outside the list. For those, write the strategy in Python and put the file in the registry. Either way the bot can be <a href="/freqtrade-lookahead-bias">replayed with bias checks</a> before it starts.</p>
+<h2>Try it</h2>
+<pre><code>git clone https://github.com/wickfleet/wickfleet.git
+cd wickfleet
+make quickstart</code></pre>
+<p>Needs Docker with Compose v2, git and make, on macOS or Linux. Everything runs on one machine, bound to 127.0.0.1, and a dry-run demo bot is waiting in the fleet. More in the <a href="/docs/install">install guide</a>, or look first at the <a href="https://demo.wickfleet.com/">read-only demo</a>.</p>
+<h2>More on running a fleet</h2>
+<ul class="cards">
+  <li><a href="/freqtrade-multiple-bots">Multiple bots on one server<span>What each bot needs of its own, by hand and from a registry</span></a></li>
+  <li><a href="/freqtrade-dashboard">One dashboard for every bot<span>Fleet totals, compare and risk on top of FreqUI</span></a></li>
+  <li><a href="/freqtrade-lookahead-bias">Lookahead bias checks<span>What it is, how to find it, and the gate before a bot starts</span></a></li>
+  <li><a href="/freqtrade-docker-compose">Docker Compose, one address<span>Many bots behind one origin, and where the CORS error comes from</span></a></li>
+  <li><a href="/freqtrade-backtest-vs-dry-run">Backtest against dry run<span>Why the two differ, and what a replay checks</span></a></li>
+  <li><a href="/self-hosted-trading-bot-dashboard">Dashboards compared<span>Open-source ways to watch several Freqtrade bots</span></a></li>
+</ul>
+<p>Wickfleet is software for running trading bots, not a recommendation to buy or sell anything. Backtests and replays describe the past, not the future. Every bot is a dry run on a simulated wallet by default.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>

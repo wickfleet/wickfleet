@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreqAI bots in a Freqtrade fleet - Wickfleet</title>
+<meta name="description" content="Run FreqAI bots next to plain Freqtrade bots in Wickfleet: a model in a strategy spec, replays with their own memory cap, and what the bias checks skip.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://wickfleet.com/docs/freqai">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Wickfleet">
+<meta property="og:title" content="FreqAI bots in a Freqtrade fleet - Wickfleet">
+<meta property="og:description" content="Run FreqAI bots next to plain Freqtrade bots in Wickfleet: a model in a strategy spec, replays with their own memory cap, and what the bias checks skip.">
+<meta property="og:url" content="https://wickfleet.com/docs/freqai">
+<meta property="og:image" content="https://wickfleet.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wickfleet: one browser UI for a fleet of Freqtrade bots">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FreqAI bots in a Freqtrade fleet - Wickfleet">
+<meta name="twitter:description" content="Run FreqAI bots next to plain Freqtrade bots in Wickfleet: a model in a strategy spec, replays with their own memory cap, and what the bias checks skip.">
+<meta name="twitter:image" content="https://wickfleet.com/img/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Wickfleet","item":"https://wickfleet.com/"},{"@type":"ListItem","position":2,"name":"Docs","item":"https://wickfleet.com/docs/"},{"@type":"ListItem","position":3,"name":"FreqAI","item":"https://wickfleet.com/docs/freqai"}]}</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="/"><img src="/favicon.svg" alt="" width="28" height="28"> Wickfleet</a>
+  <nav class="nav" aria-label="Site">
+    <a href="/docs/" aria-current="page">Docs</a>
+    <a href="https://demo.wickfleet.com/">Demo</a>
+    <a href="https://github.com/wickfleet/wickfleet">GitHub</a>
+  </nav>
+</header>
+<main class="wrap doc">
+  <ul class="docnav" aria-label="Docs">
+    <li><a href="/docs/">Docs</a></li>
+    <li><a href="/docs/install">Install</a></li>
+    <li><a href="/docs/roles">Roles and login</a></li>
+    <li><a href="/docs/compare">Compare</a></li>
+    <li><a href="/docs/freqai" aria-current="page">FreqAI</a></li>
+    <li><a href="/docs/risk">Risk</a></li>
+    <li><a href="/docs/demo">Demo mode</a></li>
+    <li><a href="/docs/faq">FAQ</a></li>
+  </ul>
+<h1>FreqAI bots</h1>
+<p class="lede">A FreqAI bot is a bot like any other in Wickfleet: one registry entry, one container, the same fleet views. Two things are specific to it. A strategy spec can trade on the model's prediction, and a replay of a FreqAI bot runs with more memory and without the bias checks.</p>
+<h2>A FreqAI bot in the registry</h2>
+<div class="table"><table>
+<thead><tr><th>Bot field</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td><code>freqaimodel</code></td><td>the model class. Wickfleet passes it to freqtrade as <code>--freqaimodel</code>, for the bot and for every replay of it</td></tr>
+<tr><td><code>config_extra.freqai</code></td><td>the bot's FreqAI config, as freqtrade reads it. The feature settings sit under <code>feature_parameters</code>: <code>indicator_periods_candles</code>, <code>include_timeframes</code>, <code>include_corr_pairlist</code>, <code>label_period_candles</code></td></tr>
+<tr><td><code>image</code></td><td>the key of an image the admin listed in <code>WICKFLEET_IMAGES</code> and in the guard's <code>WFGUARD_IMAGES</code>. It must point at a freqtrade image that ships FreqAI, for example the <code>stable_freqai</code> tag. PyTorch models need <code>stable_freqaitorch</code>, reinforcement learning needs <code>stable_freqairl</code>. The quick start lists only the plain <code>freqtrade</code> key</td></tr>
+</tbody>
+</table></div>
+<p><code>freqaimodel</code> and <code>config_extra</code> are set in the bot's registry file. The bot form in the UI does not offer them.</p>
+<h2>A model in a strategy spec</h2>
+<p>A strategy can be a small JSON spec instead of Python. Add <code>model</code> and the conditions can use two more operands: <code>prediction</code> and <code>do_predict</code>.</p>
+<pre><code>{
+  "version": 1,
+  "name": "FreqaiExample",
+  "timeframe": "1h",
+  "stoploss": -0.10,
+  "model": {"features": "freqai_example", "target": "mean_return"},
+  "startup_candles": 40,
+  "entry_guard": {"max_above_close": 0.0025},
+  "indicators": [],
+  "entry": {"all": [
+    {"left": "do_predict", "op": "==", "right": 1},
+    {"left": "prediction", "op": "&gt;", "right": 0.02}
+  ]},
+  "exit": {"all": [
+    {"left": "do_predict", "op": "==", "right": 1},
+    {"left": "prediction", "op": "&lt;", "right": 0}
+  ]}
+}</code></pre>
+<div class="table"><table>
+<thead><tr><th>Key</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>model.features</code></td><td><code>freqai_example</code>, a fixed feature set that follows freqtrade's FreqAI example strategy</td></tr>
+<tr><td><code>model.target</code></td><td><code>mean_return</code>: the mean close over the next <code>label_period_candles</code>, as a return</td></tr>
+<tr><td><code>prediction</code></td><td>the model's predicted return. <code>0.02</code> is 2%</td></tr>
+<tr><td><code>do_predict</code></td><td>FreqAI's outlier flag, an integer from -2 to 2. <code>== 1</code> means the prediction is trustworthy</td></tr>
+<tr><td><code>startup_candles</code></td><td>required with a model, because the indicator periods live in the bot's FreqAI config and not in the spec</td></tr>
+<tr><td><code>entry_guard.max_above_close</code></td><td>refuses a buy filled too far above the last close</td></tr>
+</tbody>
+</table></div>
+<p>A spec with a model only runs on a FreqAI bot. Saving a bot through the hub with such a spec is refused, with the reason, unless the bot has both <code>freqaimodel</code> and a <code>freqai</code> config.</p>
+<h2>Replays of a FreqAI bot</h2>
+<div class="table"><table>
+<thead><tr><th>Part</th><th>Plain bot</th><th>FreqAI bot</th></tr></thead>
+<tbody>
+<tr><td>Memory per replay container</td><td>1536 MB, <code>WICKFLEET_REPLAY_MEM_MB</code></td><td>3072 MB, <code>WICKFLEET_REPLAY_FREQAI_MEM_MB</code></td></tr>
+<tr><td>Candles fetched</td><td>the bot's pairs and timeframe</td><td>plus the model's <code>include_timeframes</code>. The <code>include_corr_pairlist</code> pairs are in the hub's daily store fetch</td></tr>
+<tr><td>Lookahead and recursive analysis</td><td>run after the backtest</td><td>skipped and shown as skipped. Freqtrade's analysis supports FreqAI strategies, but it retrains the model for every signal it checks, which is too slow for a replay</td></tr>
+<tr><td>Robustness verdict</td><td colspan="2">the same for both: walk-forward windows and Monte Carlo over the replay's trades</td></tr>
+</tbody>
+</table></div>
+<p>A FreqAI bot can sit in a <a href="/docs/compare">comparison</a> next to plain bots, since each bot there is an ordinary replay job.</p>
+<p>A prediction is a model's guess from past candles. The replay shows how that guess would have traded, not how it will.</p>
+</main>
+
+<footer class="wrap foot">
+  <nav aria-label="Docs">
+    <a href="/docs/install">Install</a>
+    <a href="/docs/roles">Roles and login</a>
+    <a href="/docs/compare">Compare</a>
+    <a href="/docs/freqai">FreqAI</a>
+    <a href="/docs/risk">Risk</a>
+    <a href="/docs/demo">Demo mode</a>
+    <a href="/docs/faq">FAQ</a>
+  </nav>
+  <p>Built on <a href="https://www.freqtrade.io">Freqtrade</a> and a fork of <a href="https://github.com/freqtrade/frequi">FreqUI</a> by Matthias Voppichler and contributors. Thank you.</p>
+  <p>Copyright (C) 2026 <a href="https://github.com/dhumpf">@dhumpf</a>. Free software under the <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3.0</a>. Source on <a href="https://github.com/wickfleet/wickfleet">GitHub</a>. Not financial advice.</p>
+  <p>A <a href="https://hit-con.ca">HIT CON</a> project, alongside <a href="https://thesada.io">Thesada</a>.</p>
+</footer>
+</body>
+</html>
